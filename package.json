@@ -1,0 +1,24 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "An express server set up to server both html pages and json rest responses",
+  "private": true,
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Cheevr/Server.git"
+  },
+  "keywords": [
+    "express",
+    "pug",
+    "stylus",
+    "web",
+    "rest"
+  ],
+  "author": "Ravi Gairola <ravi@cheevr.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Cheevr/Server/issues"
+  },
+  "homepage": "https://github.com/Cheevr/Server#readme"
+}
