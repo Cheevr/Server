@@ -5,9 +5,27 @@ var path = require('path');
 var stylus = require('stylus');
 
 var app = module.exports = express();
+var shutdown = false;
+var shutdownTimer = 10;
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, '../' + config.paths.views));
+
+// Health check that will gracefully signal shutdown
+app.get('/health', (req, res) => {
+    if (shutdown) {
+        return res.status(500).end();
+    }
+    res.end();
+});
+
+// Shutdown handler for graceful termination with delay for drain
+process.on('SIGTERM', () => {
+    console.log('SIGTERM: Shutting down in', shutdownTimer, 'seconds!');
+    shutdown = true;
+    setInterval(() => console.log(--shutdownTimer), 1000);
+    setTimeout(process.exit, shutdownTimer * 1000, 0);
+});
 
 // Stylus to CSS compiler on request
 app.use('/css', stylus.middleware({
@@ -23,17 +41,10 @@ app.use('/img', express.static(path.join(__dirname, '../' + config.paths.img)));
 app.use('/js', express.static(path.join(__dirname, '../'+ config.paths.js)));
 app.get('/', (req, res) => res.render('index'));
 
-// Load all routes
-let routeDir = path.join(__dirname, '..', config.paths.routes);
-let files = fs.readdirSync(routeDir);
-for (let file of files) {
-    let route = require(path.join(routeDir, file));
-    app.use(route.endpoint, route);
-}
-
-// Debug handler
+// Default handler
 app.use((req, res) => {
-    res.status(404).end();
+    // TODO use i18n system
+    res.status(404).end('File not found!');
 });
 
 // Server Startup
