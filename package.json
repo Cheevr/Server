@@ -20,7 +20,6 @@
   "bugs": {
     "url": "https://github.com/Cheevr/Server/issues"
   },
-  "homepage": "https://github.com/Cheevr/Server#readme",
   "dependencies": {
     "express": "^4",
     "config": "https://github.com/Cheevr/Config.git",

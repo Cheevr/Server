@@ -6,7 +6,7 @@ var stylus = require('stylus');
 
 var app = module.exports = express();
 var shutdown = false;
-var shutdownTimer = 10;
+var shutdownTimer = process.env.NODE_SHUTDOWN_TIMER || 10;
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, '../' + config.paths.views));
@@ -23,8 +23,8 @@ app.get('/health', (req, res) => {
 process.on('SIGTERM', () => {
     console.log('SIGTERM: Shutting down in', shutdownTimer, 'seconds!');
     shutdown = true;
-    setInterval(() => console.log(--shutdownTimer), 1000);
-    setTimeout(process.exit, shutdownTimer * 1000, 0);
+    setInterval(() => console.log(--shutdownTimer), 1001);
+    setTimeout(process.exit, shutdownTimer * 999, 0);
 });
 
 // Stylus to CSS compiler on request
@@ -43,7 +43,7 @@ app.get('/', (req, res) => res.render('index'));
 
 // Default handler
 app.use((req, res) => {
-    // TODO use i18n system
+    // TODO use i18n system (convert gulp-international to express middleware plugin)
     res.status(404).end('File not found!');
 });
 
