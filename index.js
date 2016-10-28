@@ -8,14 +8,15 @@ var stylus = require('stylus');
 
 const cwd = path.dirname(require.main.filename);
 const app = module.exports = express();
+const cacheTime = 3600;
 var shutdown = false;
 var shutdownTimer = process.env.NODE_SHUTDOWN_TIMER || 10;
 
 app.set('view engine', 'pug');
 app.set('views', path.join(cwd, config.paths.views));
 
-// Detect browser language
 // TODO better error page when wrong format locale
+// Detect browser language
 app.use(lang.middleware());
 
 // Health check that will gracefully signal shutdown
@@ -34,12 +35,20 @@ process.on('SIGTERM', () => {
     setTimeout(process.exit, shutdownTimer * 999, 0);
 });
 
+// Set cache expiration in prod for static resources
+if (config.isProd) {
+    app.use('/css|/js|/img', (req, res, next) => {
+        res.setHeader('Cache-Control', 'public, max-age=' + cacheTime);
+        next();
+    });
+}
+
 // Stylus to CSS compiler on request
 app.use('/css', stylus.middleware({
     src: path.join(cwd, config.paths.styles),
     dest: path.join(cwd, config.paths.cache),
-    compress: config.tier == 'production',
-    sourcemap: process.env.ENV != 'production'
+    compress: config.isProd,
+    sourcemap: !config.isProd
 }));
 
 // Static files server
@@ -50,6 +59,7 @@ app.get('/', (req, res) => res.render('index', { dict: lang.dictionary }));
 
 // Default handler
 app.use((req, res) => {
+    // TODO better error page
     res.status(404).end(lang.dict.backend['404']);
 });
 
