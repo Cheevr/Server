@@ -23,6 +23,7 @@
   "dependencies": {
     "express": "^4",
     "config": "https://github.com/Cheevr/Config.git",
+    "lang": "https://github.com/Cheevr/Lang.git",
     "pug": "^2.0.0-beta6",
     "stylus": "^0.54"
   }

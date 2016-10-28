@@ -1,6 +1,7 @@
 var config = require('config');
 var express = require('express');
 var fs = require('fs');
+var lang = require('lang');
 var path = require('path');
 var stylus = require('stylus');
 
@@ -10,6 +11,10 @@ var shutdownTimer = process.env.NODE_SHUTDOWN_TIMER || 10;
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, '../' + config.paths.views));
+
+// Detect browser language
+// TODO better error page when wrong format locale
+app.use(lang.middleware());
 
 // Health check that will gracefully signal shutdown
 app.get('/health', (req, res) => {
@@ -39,12 +44,11 @@ app.use('/css', stylus.middleware({
 app.use('/css|/js', express.static(path.join(__dirname, '../' + config.paths.cache)));
 app.use('/img', express.static(path.join(__dirname, '../' + config.paths.img)));
 app.use('/js', express.static(path.join(__dirname, '../'+ config.paths.js)));
-app.get('/', (req, res) => res.render('index'));
+app.get('/', (req, res) => res.render('index', { dict: lang.dictionary }));
 
 // Default handler
 app.use((req, res) => {
-    // TODO use i18n system (convert gulp-international to express middleware plugin)
-    res.status(404).end('File not found!');
+    res.status(404).end(lang.dict.backend['404']);
 });
 
 // Server Startup
