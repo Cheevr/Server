@@ -21,8 +21,9 @@
     "url": "https://github.com/Cheevr/Server/issues"
   },
   "dependencies": {
-    "express": "^4",
     "config": "https://github.com/Cheevr/Config.git",
+    "express": "^4",
+    "helmet": "^3.0.0",
     "lang": "https://github.com/Cheevr/Lang.git",
     "pug": "^2.0.0-beta6",
     "stylus": "^0.54"

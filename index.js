@@ -1,6 +1,7 @@
 var config = require('config');
 var express = require('express');
 var fs = require('fs');
+var helmet = require('helmet');
 var lang = require('lang');
 var path = require('path');
 var stylus = require('stylus');
@@ -14,6 +15,9 @@ var shutdownTimer = process.env.NODE_SHUTDOWN_TIMER || 10;
 
 app.set('view engine', 'pug');
 app.set('views', path.join(cwd, config.paths.views));
+
+// Protection against various attacks
+app.use(helmet());
 
 // TODO better error page when wrong format locale
 // Detect browser language
