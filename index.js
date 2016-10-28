@@ -5,12 +5,14 @@ var lang = require('lang');
 var path = require('path');
 var stylus = require('stylus');
 
-var app = module.exports = express();
+
+const cwd = path.dirname(require.main.filename);
+const app = module.exports = express();
 var shutdown = false;
 var shutdownTimer = process.env.NODE_SHUTDOWN_TIMER || 10;
 
 app.set('view engine', 'pug');
-app.set('views', path.join(__dirname, '../' + config.paths.views));
+app.set('views', path.join(cwd, config.paths.views));
 
 // Detect browser language
 // TODO better error page when wrong format locale
@@ -34,16 +36,16 @@ process.on('SIGTERM', () => {
 
 // Stylus to CSS compiler on request
 app.use('/css', stylus.middleware({
-    src: config.paths.styles,
-    dest: config.paths.cache,
+    src: path.join(cwd, config.paths.styles),
+    dest: path.join(cwd, config.paths.cache),
     compress: config.tier == 'production',
     sourcemap: process.env.ENV != 'production'
 }));
 
 // Static files server
-app.use('/css|/js', express.static(path.join(__dirname, '../' + config.paths.cache)));
-app.use('/img', express.static(path.join(__dirname, '../' + config.paths.img)));
-app.use('/js', express.static(path.join(__dirname, '../'+ config.paths.js)));
+app.use('/css|/js', express.static(path.join(cwd, config.paths.cache)));
+app.use('/img', express.static(path.join(cwd, config.paths.img)));
+app.use('/js', express.static(path.join(cwd, config.paths.js)));
 app.get('/', (req, res) => res.render('index', { dict: lang.dictionary }));
 
 // Default handler
