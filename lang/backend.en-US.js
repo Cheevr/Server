@@ -1,3 +1,5 @@
 module.exports = {
-  '404': 'File not found!'
+  'e404': 'File not found!',
+  'e422': 'Wrong Parameters!',
+  'e500': 'Server Error!'
 };

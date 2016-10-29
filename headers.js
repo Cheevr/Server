@@ -1,7 +1,6 @@
 var compression = require('compression');
 var config = require('config');
 var cookieParser = require('cookie-parser');
-var errorHandler = require('errorhandler');
 var lang = require('lang');
 var responseTime = require('response-time');
 
@@ -16,17 +15,18 @@ module.exports = app => {
     }
     // Set debugging information for development env
     else {
-        app.use(errorHandler());
         app.use(responseTime());
     }
-
-    // Support for browsers with gzip compression
-    app.use(compression());
 
     // Support cookies in requests
     app.use(cookieParser());
 
-    // TODO better error page when wrong format locale
     // Detect browser language
     app.use(lang.middleware());
+    lang.errorHandler = (req, res) => {
+        res.status(422).render('422', { dict: lang.dictionary.backend });
+    };
+
+    // Support for browsers with gzip compression
+    app.use(compression());
 };
