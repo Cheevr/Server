@@ -13,6 +13,7 @@ function checkOrigin(origin) {
 }
 
 module.exports = app => {
+    console.log('hosts', config.backend.allowedHosts)
     // Protection against various attacks
     app.use(helmet());
 

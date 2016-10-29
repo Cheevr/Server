@@ -12,6 +12,7 @@ require('./settings')(app);
 require('./security')(app);
 require('./status')(app);
 require('./headers')(app);
+require('./auth')(app);
 require('./content')(app);
 
 // Server Startup
