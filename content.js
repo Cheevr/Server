@@ -1,7 +1,9 @@
 var config = require('config');
 var express = require('express');
+var fs = require('fs');
 var lang = require('lang');
 var path = require('path');
+var Router = require('versioned-api-router');
 var stylus = require('stylus');
 
 
@@ -21,4 +23,15 @@ module.exports = app => {
     app.use('/img', express.static(path.join(cwd, config.paths.img)));
     app.use('/js', express.static(path.join(cwd, config.paths.js)));
     app.get('/', (req, res) => res.render('index', {dict: lang.dictionary}));
+
+    let routePaths = Array.isArray() ? config.paths.routes : [ config.paths.routes ];
+    let router = new Router();
+    for (let routePath of routePaths) {
+        let dir = path.join(cwd, routePath);
+        let files = fs.readdirSync(dir);
+        for (let file of files) {
+            require(path.join(dir, file))(router);
+        }
+    }
+    app.use(router);
 };

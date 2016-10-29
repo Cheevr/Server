@@ -3,5 +3,6 @@ module.exports = {
     img: 'static/img',
     js: 'static/js',
     styles: 'static/styles',
-    cache: 'cache'
+    cache: 'cache',
+    routes: 'routes'
 };
