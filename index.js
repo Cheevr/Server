@@ -1,8 +1,10 @@
 var config = require('config');
 var express = require('express');
+var lang = require('lang');
+var path = require('path');
 
-
-const app = module.exports = express();
+lang.addDirectory(path.join(__dirname, 'lang'));
+const app = express();
 
 require('./settings')(app);
 require('./security')(app);

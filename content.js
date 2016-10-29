@@ -8,6 +8,7 @@ var stylus = require('stylus');
 const cwd = path.dirname(require.main.filename);
 
 module.exports = app => {
+    // Convert stylus files to css and place them in cache dir
     app.use('/css', stylus.middleware({
         src: path.join(cwd, config.paths.styles),
         dest: path.join(cwd, config.paths.cache),
@@ -15,7 +16,7 @@ module.exports = app => {
         sourcemap: !config.isProd
     }));
 
-    // Static files server
+    // Serve static files
     app.use('/css|/js', express.static(path.join(cwd, config.paths.cache)));
     app.use('/img', express.static(path.join(cwd, config.paths.img)));
     app.use('/js', express.static(path.join(cwd, config.paths.js)));
