@@ -13,8 +13,8 @@ module.exports = app => {
 
     // Set view engine to pug
     app.set('view engine', 'pug');
-    app.set('views', path.join(cwd, config.paths.views));
+    app.set('views', path.join(cwd, config.backend.paths.views));
 
     // Set the process name to something friendly
-    process.title = 'cheevr-' + path.basename(cwd) + ' tier:' + config.tier + ' port:' + config.port;
+    process.title = 'cheevr-' + path.basename(cwd) + ' tier:' + config.tier + ' port:' + config.backend.port;
 };

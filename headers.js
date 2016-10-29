@@ -6,13 +6,11 @@ var lang = require('lang');
 var responseTime = require('response-time');
 
 
-const cacheTime = config.backend && config.backend.cacheTime || 3600;
-
 module.exports = app => {
     // Set cache expiration in prod for static resources
     if (config.isProd) {
         app.use('/css|/js|/img', (req, res, next) => {
-            res.setHeader('Cache-Control', 'public, max-age=' + cacheTime);
+            res.setHeader('Cache-Control', 'public, max-age=' + config.backend.cacheTime);
             next();
         });
     }

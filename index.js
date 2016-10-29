@@ -3,6 +3,8 @@ var express = require('express');
 var lang = require('lang');
 var path = require('path');
 
+
+config.addDefaultConfig(path.join(__dirname, 'config'));
 lang.addDirectory(path.join(__dirname, 'lang'));
 const app = express();
 
@@ -13,6 +15,6 @@ require('./headers')(app);
 require('./content')(app);
 
 // Server Startup
-app.listen(config.port);
-console.log('listening on port', config.port, 'with tier', config.tier);
+app.listen(config.backend.port);
+console.log('listening on port', config.backend.port, 'with tier', config.tier);
 

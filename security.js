@@ -3,11 +3,8 @@ var config = require('config');
 var helmet = require('helmet');
 
 
-const maxBodySize = config.backend && config.backend.maxBodySize || 10000000;
-const allowedHosts = config.backend && config.backend.allowedHosts || ['localhost:' + config.port];
-
 function checkOrigin(origin) {
-    for (let host of allowedHosts) {
+    for (let host of config.backend.allowedHosts) {
         if (origin.match(host)) {
             return true;
         }
@@ -44,13 +41,13 @@ module.exports = app => {
 
     // Parse json bodies
     app.post(/.*/, bodyParser.json({
-        limit: maxBodySize,
+        limit: config.backend.maxBodySize,
         type: 'application/json'
     }));
 
     // Parse form bodies
     app.post(/.*/, bodyParser.urlencoded({
-        limit: maxBodySize,
+        limit: config.backend.maxBodySize,
         extended: false,
         type: 'application/x-www-form-urlencoded'
     }));
