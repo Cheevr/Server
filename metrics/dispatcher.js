@@ -11,8 +11,7 @@ const bulkSize = 100;
 const interval = 1000;
 const buffer = [];
 var lastIndex = null;
-// TODO Set up Kibana server instance
-//const client = new elasticsearch.Client(config.kibana.client);
+const client = new elasticsearch.Client(config.kibana.client);
 
 exports.getIndex = (date, cb) => {
     date = new Date(date);
