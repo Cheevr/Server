@@ -21,18 +21,21 @@
     "url": "https://github.com/Cheevr/Server/issues"
   },
   "dependencies": {
+    "async": "^2",
     "body-parser": "^1",
     "compression": "^1",
     "config": "https://github.com/Cheevr/Config.git",
     "cookie-parser": "^1",
+    "elasticsearch": "^12",
     "express": "^4",
     "express-rate-limit": "^2",
     "express-token-api-middleware": "^0.6",
+    "geoip-lite": "^1",
     "helmet": "^3",
     "lang": "https://github.com/Cheevr/Lang.git",
     "pug": "^2.0.0-beta6",
     "response-time": "^2",
     "stylus": "^0.54",
-    "versioned-api-router": "^0.6.0"
+    "versioned-api-router": "^0.6"
   }
 }

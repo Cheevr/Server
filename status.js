@@ -15,6 +15,7 @@ module.exports = app => {
 
     // Shutdown handler for graceful termination with delay for drain
     process.on('SIGTERM', () => {
+        app.emit('shutdown');
         console.log('SIGTERM: Shutting down in', shutdownTimer, 'seconds!');
         shutdown = true;
         setInterval(() => console.log(--shutdownTimer), 1001);

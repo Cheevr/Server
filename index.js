@@ -9,6 +9,7 @@ lang.addDirectory(path.join(__dirname, 'lang'));
 const app = express();
 
 require('./settings')(app);
+require('./metrics')(app);
 require('./security')(app);
 require('./status')(app);
 require('./headers')(app);
