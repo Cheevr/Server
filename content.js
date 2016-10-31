@@ -1,3 +1,4 @@
+var browserify = require('browserify');
 var config = require('config');
 var express = require('express');
 var fs = require('fs');
@@ -46,7 +47,7 @@ module.exports = app => {
     app.use(router);
 
     // File Not Found handler
-    app.use((req, res) => {
+    app.all((req, res) => {
         res.status(404).render('404', {dict: lang.dictionary.backend});
     });
 
@@ -62,24 +63,28 @@ function processJs() {
     return (req, res, next) => {
         let file = req.originalUrl.replace(/^\/js\//, '');
         if (processed[file]) {
-            console.log('cached');
             return next();
         }
-        let content = fs.readFileSync(path.join(jsDir, file), 'utf8');
-        content = lang.process(content, req.locale);
-        if (config.isProd) {
-            content = uglify.minify(content, { fromString: true }).code;
-        }
-        fs.writeFileSync(path.join(cacheDir, file), content, 'utf8');
-        processed[file] = true;
-        if (!config.isProd) {
-            for (let dir of [jsDir, cacheDir]) {
-                fs.watch(path.join(dir, file), {
-                    persistent: false,
-                    encoding: 'utf8'
-                }, () => delete processed[file]);
+        let fullPath = path.join(jsDir, file);
+        browserify(fullPath, {
+            basedir: jsDir,
+            debug: !config.isProd
+        }).bundle((err, content) => {
+            content = lang.process(content.toString('utf8'), req.locale);
+            if (config.isProd) {
+                content = uglify.minify(content, {fromString: true}).code;
             }
-        }
-        next();
+            fs.writeFileSync(path.join(cacheDir, file), content, 'utf8');
+            processed[file] = true;
+            if (!config.isProd) {
+                for (let dir of [jsDir, cacheDir]) {
+                    fs.watch(path.join(dir, file), {
+                        persistent: false,
+                        encoding: 'utf8'
+                    }, () => delete processed[file]);
+                }
+            }
+            next();
+        });
     }
 }

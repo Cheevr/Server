@@ -1,6 +1,6 @@
 {
   "name": "server",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "An express server set up to server both html pages and json rest responses",
   "private": true,
   "main": "index.js",
@@ -23,6 +23,7 @@
   "dependencies": {
     "async": "^2",
     "body-parser": "^1",
+    "browserify": "^13",
     "compression": "^1",
     "config": "https://github.com/Cheevr/Config.git",
     "cookie-parser": "^1",
