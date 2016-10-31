@@ -67,17 +67,19 @@ function processJs() {
         }
         let content = fs.readFileSync(path.join(jsDir, file), 'utf8');
         content = lang.process(content, req.locale);
-        if (!config.isProd) {
+        if (config.isProd) {
             content = uglify.minify(content, { fromString: true }).code;
         }
         fs.writeFileSync(path.join(cacheDir, file), content, 'utf8');
         processed[file] = true;
-        fs.watch(path.join(jsDir, file), 'utf8', type => {
-            type == 'change' && delete processed[file];
-        });
-        fs.watch(path.join(cacheDir, file), 'utf8', type => {
-            type == 'removed' && delete processed[file];
-        });
+        if (!config.isProd) {
+            for (let dir of [jsDir, cacheDir]) {
+                fs.watch(path.join(dir, file), {
+                    persistent: false,
+                    encoding: 'utf8'
+                }, () => delete processed[file]);
+            }
+        }
         next();
     }
 }
