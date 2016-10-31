@@ -5,17 +5,17 @@ var lang = require('lang');
 var path = require('path');
 var Router = require('versioned-api-router');
 var stylus = require('stylus');
+var uglify = require('uglify-js');
 
 
 const cwd = path.dirname(require.main.filename);
+const stylesDir = path.isAbsolute(config.paths.styles) ? config.paths.styles : path.join(cwd, config.paths.styles);
+const cacheDir = path.isAbsolute(config.paths.cache) ? config.paths.cache : path.join(cwd, config.paths.cache);
+const imgDir = path.isAbsolute(config.paths.img) ? config.paths.img : path.join(cwd, config.paths.img);
+const jsDir = path.isAbsolute(config.paths.js) ? config.paths.js : path.join(cwd, config.paths.js);
 
 module.exports = app => {
     // Convert stylus files to css and place them in cache dir
-    let stylesDir = path.isAbsolute(config.paths.styles) ? config.paths.styles :  path.join(cwd, config.paths.styles);
-    let cacheDir = path.isAbsolute(config.paths.cache) ? config.paths.cache : path.join(cwd, config.paths.cache);
-    let imgDir = path.isAbsolute(config.paths.img) ? config.paths.img : path.join(cwd, config.paths.img);
-    let jsDir = path.isAbsolute(config.paths.js) ? config.paths.js : path.join(cwd, config.paths.js);
-
     fs.existsSync(stylesDir) && app.use('/css', stylus.middleware({
         src: stylesDir,
         dest: cacheDir,
@@ -23,10 +23,12 @@ module.exports = app => {
         sourcemap: !config.isProd
     }));
 
+    // Replace language placeholders
+    fs.existsSync(jsDir) && app.use('/js', processJs());
+
     // Serve static files
     fs.existsSync(cacheDir) && app.use('/css|/js', express.static(cacheDir));
     fs.existsSync(imgDir) && app.use('/img', express.static(imgDir));
-    fs.existsSync(jsDir) && app.use('/js', express.static(jsDir));
     app.get('/', (req, res) => res.render('index', {dict: lang.dictionary}));
 
     let routePaths = Array.isArray() ? config.paths.routes : [ config.paths.routes ];
@@ -54,3 +56,28 @@ module.exports = app => {
         res.status(500).render('500', { dict: lang.dictionary.backend , error });
     });
 };
+
+function processJs() {
+    let processed = {};
+    return (req, res, next) => {
+        let file = req.originalUrl.replace(/^\/js\//, '');
+        if (processed[file]) {
+            console.log('cached');
+            return next();
+        }
+        let content = fs.readFileSync(path.join(jsDir, file), 'utf8');
+        content = lang.process(content, req.locale);
+        if (!config.isProd) {
+            content = uglify.minify(content, { fromString: true }).code;
+        }
+        fs.writeFileSync(path.join(cacheDir, file), content, 'utf8');
+        processed[file] = true;
+        fs.watch(path.join(jsDir, file), 'utf8', type => {
+            type == 'change' && delete processed[file];
+        });
+        fs.watch(path.join(cacheDir, file), 'utf8', type => {
+            type == 'removed' && delete processed[file];
+        });
+        next();
+    }
+}

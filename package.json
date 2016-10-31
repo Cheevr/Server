@@ -36,6 +36,7 @@
     "pug": "^2.0.0-beta6",
     "response-time": "^2",
     "stylus": "^0.54",
+    "uglify-js": "^2",
     "versioned-api-router": "^0.6"
   }
 }
