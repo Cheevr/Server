@@ -7,10 +7,15 @@ var shutdownTimer = process.env.NODE_SHUTDOWN_TIMER || 10;
 module.exports = app => {
     // Health check that will gracefully signal shutdown
     app.get('/health', rateLimit({windowMs: 2500}), (req, res) => {
-        if (shutdown) {
-            return res.status(500).end();
+        if (!req.es.ready || shutdown) {
+            return res.status(503).end();
         }
-        res.end();
+        req.es.ping(err => {
+            if (err) {
+                return res.status(503).end();
+            }
+            res.end();
+        });
     });
 
     // Shutdown handler for graceful termination with delay for drain

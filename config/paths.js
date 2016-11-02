@@ -7,5 +7,6 @@ module.exports = {
     styles: 'static/styles',
     cache: 'cache',
     routes: 'routes',
-    errors: path.join(__dirname, '../errors')
+    errors: path.join(__dirname, '../errors'),
+    schemas: 'config/schemas'
 };

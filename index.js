@@ -1,12 +1,15 @@
 var config = require('config');
 var express = require('express');
 var lang = require('lang');
+var Database = require('./database');
 var path = require('path');
 
 
 config.addDefaultConfig(path.join(__dirname, 'config'));
 lang.addDirectory(path.join(__dirname, 'lang'));
 const app = express();
+const db = new Database();
+app.use(db.middleware());
 
 require('./settings')(app);
 require('./metrics')(app);
