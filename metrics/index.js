@@ -40,9 +40,10 @@ module.exports = app => {
     });
     app.on('shutdown', () => {
         setTimeout(() => {
-            console.log('Terminating metrics dispatcher');
             dispatcher.disconnect();
         }, shutdownTimer * 500);
     });
-    process.on('exit', dispatcher.kill);
+    process.on('exit', () => {
+        dispatcher.kill();
+    });
 };

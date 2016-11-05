@@ -8,12 +8,19 @@ var path = require('path');
 const cwd = path.dirname(require.main.filename);
 
 class Database {
+    /**
+     *
+     * @param {object} opts The ElasticSearch options object
+     * @param {string} dir  The file or directory with the mappings for all the indices
+     */
     constructor(opts = config.elasticsearch, dir = config.paths.schemas) {
-        this._dir = path.isAbsolute(dir) ? dir : path.join(cwd, dir);
+        if (dir) {
+            this._dir = path.isAbsolute(dir) ? dir : path.join(cwd, dir);
+        }
         this._opts = opts;
         this._ready = false;
         this._client = new elasticsearch.Client(this._opts.client);
-        setTimeout(this._createMappings, 100);
+        setTimeout(this._createMappings.bind(this), 100);
     }
 
     get client() {
@@ -21,22 +28,37 @@ class Database {
     }
 
     _createMappings() {
-        if (!fs.existsSync(this._dir)) {
-            return this._ready = true;
-        }
         this._client.cluster.health({
-            waitForStatus: 'green',
+            waitForStatus: 'yellow',
             waitForEvents: 'normal'
         }, err => {
             if (err) {
                 return console.log('Unable to connect to ElasticSearch cluster', err);
             }
-            let files = fs.readdirSync(this._dir);
+            if (!fs.existsSync(this._dir)) {
+                return this._ready = true;
+            }
+            let files;
             let tasks = [];
-            for (let file of files) {
-                let ext = path.extname(file);
-                let index = this._opts.index || path.basename(file, ext);
-                let schema = require(path.join(this._dir, file));
+            if (fs.statSync(this._dir).isDirectory()) {
+                files = fs.readdirSync(this._dir);
+                for (let file of files) {
+                    let ext = path.extname(file);
+                    let index = this._opts.index || path.basename(file, ext);
+                    let schema = require(path.join(this._dir, file));
+                    tasks.push(cb => {
+                        this.client.indices.exists({index}, (err, exists) => {
+                            if (exists) {
+                                return cb();
+                            }
+                            this.client.indices.create({index, body: schema}, cb);
+                        });
+                    });
+                }
+            } else {
+                let ext = path.extname(this._dir);
+                let index = this._opts.index || path.basename(this._dir, ext);
+                let schema = require(this._dir);
                 tasks.push(cb => {
                     this.client.indices.exists({index}, exists => {
                         if (exists) {

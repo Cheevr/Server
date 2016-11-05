@@ -1,11 +1,8 @@
 module.exports = {
+    enabled: true,
     client: {
-        host: 'http://metrics.cheevr.com:9200',
-        apiVersion: '5.0',
-        sniffOnStart: true,
-        sniffInterval: 10000,
-        sniffOnConnectionFault: true,
-        keepAlive: true
+        host: 'logs.cheevr.net:9200',
+        apiVersion: '5.0'
     },
     mapping: {
         _all: { enabled: true, omit_norms: true },

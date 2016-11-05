@@ -1,17 +1,18 @@
 var async = require('async');
 var config = require('config');
-var elasticsearch = require('elasticsearch');
+var Database = require('../database');
 var geoip = require('geoip-lite');
 var path = require('path');
 
 
+process.title = 'cheevr-metrics' + ' tier:' + config.tier;
 config.addDefaultConfig(path.join(__dirname, '../config'));
 const type = 'metric';
 const bulkSize = 100;
 const interval = 1000;
 const buffer = [];
 var lastIndex = null;
-const client = new elasticsearch.Client(config.kibana.client);
+const client = new Database(config.kibana, false).client;
 
 exports.getIndex = (date, cb) => {
     date = new Date(date);
@@ -67,19 +68,20 @@ exports.poll = kill => {
     if (kill) {
         clearInterval(timeout);
         console.log('Metrics dispatcher terminated');
+        process.exit();
     }
 };
 
 exports.createMapping = (index, cb) => {
     async.waterfall([
         cb => client.indices.exists({index}, cb),
-        (exists, ignored, cb) => exists ? cb() : client.indices.create({index}, cb),
-        cb => client.indices.existsType({index, type}, cb),
-        (exists, ignore, cb) => exists ? cb() : client.indices.putMapping({
-            index,
-            type,
-            body: config.kibana.mapping
-        }, cb)
+        (exists, ignored, cb) => {
+            if (exists) {
+                return cb();
+            }
+            console.log('Creating index', index);
+            client.indices.create({ index, body: { mappings: { [index]: config.kibana.mapping } } }, cb)
+        },
     ], err => cb(err, index));
 };
 
