@@ -4,6 +4,7 @@ var path = require('path');
 
 
 const hostname = require('os').hostname();
+const application = path.basename(path.dirname(require.main.filename));
 var shutdownTimer = (process.env.NODE_SHUTDOWN_TIMER || 10);
 
 module.exports = app => {
@@ -19,6 +20,7 @@ module.exports = app => {
             '@timestamp': new Date(),
             process: process.pid,
             hostname,
+            application,
             tier: config.tier,
             request: {
                 method: req.method,

@@ -10,6 +10,7 @@ var uglify = require('uglify-js');
 
 
 const cwd = path.dirname(require.main.filename);
+const viewDir = path.isAbsolute(config.paths.views) ? config.paths.views : path.join(cwd, config.paths.views);
 const stylesDir = path.isAbsolute(config.paths.styles) ? config.paths.styles : path.join(cwd, config.paths.styles);
 const cacheDir = path.isAbsolute(config.paths.cache) ? config.paths.cache : path.join(cwd, config.paths.cache);
 const imgDir = path.isAbsolute(config.paths.img) ? config.paths.img : path.join(cwd, config.paths.img);
@@ -29,8 +30,26 @@ module.exports = app => {
 
     // Serve static files
     fs.existsSync(cacheDir) && app.use('/css|/js', express.static(cacheDir));
-    fs.existsSync(imgDir) && app.use('/img', express.static(imgDir));
-    app.get('/', (req, res) => res.render('index', {dict: lang.dictionary}));
+    let staticConfig = config.isProd ? { maxAge: 86400000 } : {};
+    fs.existsSync(imgDir) && app.use('/img', express.static(imgDir, staticConfig));
+    let existingFiles = {};
+    fs.existsSync(viewDir) && app.get('*', (req, res, next) => {
+        let file = req.originalUrl.replace(/^\//, '');
+        if (!file.length) {
+            file = 'index';
+        } else {
+            let ext = path.extname(file);
+            file = path.join(path.dirname(file), path.basename(file, ext));
+        }
+        if (existingFiles[file] === undefined) {
+            existingFiles[file] = fs.existsSync(path.join(viewDir, file + '.pug'));
+        }
+        if (existingFiles[file]) {
+            res.render(file, {dict: lang.dictionary});
+        } else {
+            next();
+        }
+    });
 
     let routePaths = Array.isArray() ? config.paths.routes : [ config.paths.routes ];
     let router = new Router();
