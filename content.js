@@ -32,6 +32,22 @@ module.exports = app => {
     fs.existsSync(cacheDir) && app.use('/css|/js', express.static(cacheDir));
     let staticConfig = config.isProd ? { maxAge: 86400000 } : {};
     fs.existsSync(imgDir) && app.use('/img', express.static(imgDir, staticConfig));
+
+    let routePaths = Array.isArray() ? config.paths.routes : [ config.paths.routes ];
+    let router = new Router();
+    router.auth = app.auth;
+    for (let routePath of routePaths) {
+        let dir = path.isAbsolute(routePath) ? routePath : path.join(cwd, routePath);
+        if (fs.existsSync(dir)) {
+            let files = fs.readdirSync(dir);
+            for (let file of files) {
+                require(path.join(dir, file))(router);
+            }
+        }
+    }
+    app.use(router);
+
+    // Server view files (pug)
     let existingFiles = {};
     fs.existsSync(viewDir) && app.get('*', (req, res, next) => {
         let file = req.originalUrl.replace(/^\//, '');
@@ -50,20 +66,6 @@ module.exports = app => {
             next();
         }
     });
-
-    let routePaths = Array.isArray() ? config.paths.routes : [ config.paths.routes ];
-    let router = new Router();
-    router.auth = app.auth;
-    for (let routePath of routePaths) {
-        let dir = path.isAbsolute(routePath) ? routePath : path.join(cwd, routePath);
-        if (fs.existsSync(dir)) {
-            let files = fs.readdirSync(dir);
-            for (let file of files) {
-                require(path.join(dir, file))(router);
-            }
-        }
-    }
-    app.use(router);
 
     // File Not Found handler
     app.all((req, res) => {
