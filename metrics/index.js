@@ -13,7 +13,6 @@ module.exports = app => {
     }
     const dispatcher = childProces.fork(path.join(__dirname, './dispatcher.js'), process.argv);
     app.use((req, res, next) => {
-        let incoming = 0;
         let startTime = process.hrtime();
         let sizeOffset = req.socket._bytesDispatched;
         req.metrics = {
@@ -28,13 +27,13 @@ module.exports = app => {
                 ip: req.ip
             }
         };
-        req.on('data', chunk => incoming += chunk.length);
         res.on('finish', function () {
             let endTime = process.hrtime(startTime);
             let time = Math.round(endTime[0] * 1e3 + endTime[1] * 1e-6);
             let status = res.statusCode;
-            let size = req.socket._bytesDispatched - sizeOffset;
-            req.metrics.request.size = incoming;
+            let size = req.socket.bytesWritten;
+            req.args && (req.metrics.request.args = req.args);
+            req.metrics.request.size = req.socket.bytesRead;
             req.metrics.response = { status, size, time };
             dispatcher.send(req.metrics);
         });

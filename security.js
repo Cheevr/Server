@@ -40,13 +40,13 @@ module.exports = app => {
     });
 
     // Parse json bodies
-    app.post(/.*/, bodyParser.json({
+    app.post('*', bodyParser.json({
         limit: config.backend.maxBodySize,
-        type: 'application/json'
+        type: '*/json'
     }));
 
     // Parse form bodies
-    app.post(/.*/, bodyParser.urlencoded({
+    app.post('*', bodyParser.urlencoded({
         limit: config.backend.maxBodySize,
         extended: false,
         type: 'application/x-www-form-urlencoded'

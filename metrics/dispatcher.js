@@ -88,4 +88,10 @@ exports.createMapping = (index, cb) => {
 process.on('message', message => buffer.push(message));
 process.on('SIGTERM', exports.poll.bind(null, true));
 
+// Watch parent exit when it dies
+process.stdout.resume();
+process.stdout.on('end', function () {
+    process.exit();
+});
+
 let timeout = setInterval(exports.poll, interval);

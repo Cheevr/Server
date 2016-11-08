@@ -1,7 +1,7 @@
 exports.port = 8080;
 
 // Maximum size in bytes
-exports.maxBodySize = 10000000;
+exports.maxBodySize = '10mb';
 
 // Allowed domains for cross domain requests
 exports.allowedHosts = ['localhost:' + exports.port];
