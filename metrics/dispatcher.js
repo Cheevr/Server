@@ -47,7 +47,6 @@ exports.setGeoIP = metric => {
 exports.poll = kill => {
     while (buffer.length) {
         let metrics = buffer.splice(0, bulkSize);
-        console.log('Dispatching', metrics.length, 'messages');
         let bulkRequest = [];
         async.each(metrics, (metric, cb) => {
             async.retry(3, cb => {
@@ -90,8 +89,6 @@ process.on('SIGTERM', exports.poll.bind(null, true));
 
 // Watch parent exit when it dies
 process.stdout.resume();
-process.stdout.on('end', function () {
-    process.exit();
-});
+process.stdout.on('end', () => process.exit());
 
 let timeout = setInterval(exports.poll, interval);

@@ -14,7 +14,6 @@ module.exports = app => {
     const dispatcher = childProces.fork(path.join(__dirname, './dispatcher.js'), process.argv);
     app.use((req, res, next) => {
         let startTime = process.hrtime();
-        let sizeOffset = req.socket._bytesDispatched;
         req.metrics = {
             '@timestamp': new Date(),
             process: process.pid,
