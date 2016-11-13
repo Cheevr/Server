@@ -61,7 +61,10 @@ module.exports = app => {
             existingFiles[file] = fs.existsSync(path.join(viewDir, file + '.pug'));
         }
         if (existingFiles[file]) {
-            res.render(file, {dict: lang.dictionary});
+            res.render(file, {
+                dict: lang.dictionary,
+                user: req.user
+            });
         } else {
             next();
         }
