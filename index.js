@@ -1,7 +1,7 @@
 var config = require('config');
 var express = require('express');
 var lang = require('lang');
-var Database = require('./database');
+var Database = require('./database/index');
 var path = require('path');
 
 

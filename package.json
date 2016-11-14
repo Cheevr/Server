@@ -34,6 +34,7 @@
     "geoip-lite": "^1",
     "helmet": "^3",
     "lang": "https://github.com/Cheevr/Lang.git",
+    "moment": "^2",
     "pug": "^2.0.0-beta6",
     "response-time": "^2",
     "stylus": "^0.54",

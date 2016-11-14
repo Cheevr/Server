@@ -1,6 +1,6 @@
 var async = require('async');
 var config = require('config');
-var Database = require('../database');
+var Database = require('../database/index');
 var geoip = require('geoip-lite');
 var path = require('path');
 

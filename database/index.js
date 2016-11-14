@@ -1,4 +1,5 @@
 var async = require('async');
+var Cache = require('./cache');
 var config = require('config');
 var elasticsearch = require('elasticsearch');
 var fs = require('fs');
@@ -20,11 +21,16 @@ class Database {
         this._opts = opts;
         this._ready = false;
         this._client = new elasticsearch.Client(this._opts.client);
+        this._cache = new Cache(this);
         setTimeout(this._createMappings.bind(this), 100);
     }
 
     get client() {
         return this._client;
+    }
+
+    get cache() {
+        return this._cache.proxy;
     }
 
     _createMappings() {
@@ -79,7 +85,7 @@ class Database {
 
     middleware() {
         return (req, res, next) => {
-            req.es = this.client;
+            req.es = this.cache;
             req.es.ready = this.ready;
             next();
         }
