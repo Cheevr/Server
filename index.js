@@ -1,7 +1,9 @@
 var config = require('config');
 var express = require('express');
 var lang = require('lang');
-var Database = require('./database/index');
+var metrics = require('./metrics');
+var moment = require('moment');
+var Database = require('./database');
 var path = require('path');
 
 
@@ -12,7 +14,7 @@ const db = new Database();
 app.use(db.middleware());
 
 require('./settings')(app);
-require('./metrics')(app);
+metrics(app);
 require('./security')(app);
 require('./status')(app);
 require('./headers')(app);

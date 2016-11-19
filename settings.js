@@ -4,6 +4,8 @@ var path = require('path');
 
 
 const cwd = path.dirname(require.main.filename);
+const viewDir = config.normalizePath(cwd, config.paths.views);
+const errorDir = config.normalizePath(cwd, config.paths.errors);
 
 module.exports = app => {
     // Configure the jsonp callback
@@ -13,12 +15,9 @@ module.exports = app => {
     app.set('trust proxy', true);
 
     // Set view engine to pug
-    let viewDir = path.isAbsolute(config.paths.views) ? config.paths.views : path.join(cwd, config.paths.views);
-    let errorDir = path.isAbsolute(config.paths.errors) ? config.paths.errors : path.join(cwd, config.paths.errors);
-    if (fs.existsSync(viewDir)) {
-        app.set('view engine', 'pug');
-        app.set('views', [ viewDir, errorDir ]);
-    }
+    let views = viewDir.concat(errorDir).filter(dir => fs.existsSync(dir));
+    app.set('view engine', 'pug');
+    app.set('views', views);
 
     // Set the process name to something friendly
     process.title = 'cheevr-' + path.basename(cwd) + ' tier:' + config.tier + ' port:' + config.backend.port;

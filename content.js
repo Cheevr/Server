@@ -10,28 +10,34 @@ var uglify = require('uglify-js');
 
 
 const cwd = path.dirname(require.main.filename);
-const viewDir = path.isAbsolute(config.paths.views) ? config.paths.views : path.join(cwd, config.paths.views);
-const stylesDir = path.isAbsolute(config.paths.styles) ? config.paths.styles : path.join(cwd, config.paths.styles);
+const viewDir = config.normalizePath(cwd, config.paths.views);
+const stylesDir = config.normalizePath(cwd, config.paths.styles);
+const imgDir = config.normalizePath(cwd, config.paths.img);
+const jsDir = config.normalizePath(cwd, config.paths.js);
 const cacheDir = path.isAbsolute(config.paths.cache) ? config.paths.cache : path.join(cwd, config.paths.cache);
-const imgDir = path.isAbsolute(config.paths.img) ? config.paths.img : path.join(cwd, config.paths.img);
-const jsDir = path.isAbsolute(config.paths.js) ? config.paths.js : path.join(cwd, config.paths.js);
 
 module.exports = app => {
     // Convert stylus files to css and place them in cache dir
-    fs.existsSync(stylesDir) && app.use('/css', stylus.middleware({
-        src: stylesDir,
-        dest: cacheDir,
-        compress: config.isProd,
-        sourcemap: !config.isProd
-    }));
+    for (let dir of stylesDir) {
+        fs.existsSync(stylesDir) && app.use('/css', stylus.middleware({
+            src: dir,
+            dest: cacheDir,
+            compress: config.isProd,
+            sourcemap: !config.isProd
+        }));
+    }
 
     // Replace language placeholders
-    fs.existsSync(jsDir) && app.use('/js', processJs());
+    for (let dir of jsDir) {
+        fs.existsSync(dir) && app.use('/js', processJs());
+    }
 
     // Serve static files
     fs.existsSync(cacheDir) && app.use('/css|/js', express.static(cacheDir));
     let staticConfig = config.isProd ? { maxAge: 86400000 } : {};
-    fs.existsSync(imgDir) && app.use('/img', express.static(imgDir, staticConfig));
+    for (let dir of imgDir) {
+        fs.existsSync(dir) && app.use('/img', express.static(dir, staticConfig));
+    }
 
     let routePaths = Array.isArray() ? config.paths.routes : [ config.paths.routes ];
     let router = new Router();
@@ -49,26 +55,28 @@ module.exports = app => {
 
     // Server view files (pug)
     let existingFiles = {};
-    fs.existsSync(viewDir) && app.get('*', (req, res, next) => {
-        let file = req.originalUrl.replace(/^\//, '');
-        if (!file.length) {
-            file = 'index';
-        } else {
-            let ext = path.extname(file);
-            file = path.join(path.dirname(file), path.basename(file, ext));
-        }
-        if (existingFiles[file] === undefined) {
-            existingFiles[file] = fs.existsSync(path.join(viewDir, file + '.pug'));
-        }
-        if (existingFiles[file]) {
-            res.render(file, {
-                dict: lang.dictionary,
-                user: req.user
-            });
-        } else {
-            next();
-        }
-    });
+    for (let dir of viewDir) {
+        fs.existsSync(dir) && app.get('*', (req, res, next) => {
+            let file = req.originalUrl.replace(/^\//, '');
+            if (!file.length) {
+                file = 'index';
+            } else {
+                let ext = path.extname(file);
+                file = path.join(path.dirname(file), path.basename(file, ext));
+            }
+            if (existingFiles[file] === undefined) {
+                existingFiles[file] = fs.existsSync(path.join(dir, file + '.pug'));
+            }
+            if (existingFiles[file]) {
+                res.render(file, {
+                    dict: lang.dictionary,
+                    user: req.user
+                });
+            } else {
+                next();
+            }
+        });
+    }
 
     // File Not Found handler
     app.all((req, res) => {
@@ -89,26 +97,31 @@ function processJs() {
         if (processed[file]) {
             return next();
         }
-        let fullPath = path.join(jsDir, file);
-        browserify(fullPath, {
-            basedir: jsDir,
-            debug: !config.isProd
-        }).bundle((err, content) => {
-            content = lang.process(content.toString('utf8'), req.locale);
-            if (config.isProd) {
-                content = uglify.minify(content, {fromString: true}).code;
+        for (let dir of jsDir) {
+            let fullPath = path.join(dir, file);
+            if (!fs.existsSync(fullPath)) {
+                continue;
             }
-            fs.writeFileSync(path.join(cacheDir, file), content, 'utf8');
-            processed[file] = true;
-            if (!config.isProd) {
-                for (let dir of [jsDir, cacheDir]) {
-                    fs.watch(path.join(dir, file), {
-                        persistent: false,
-                        encoding: 'utf8'
-                    }, () => delete processed[file]);
+            browserify(fullPath, {
+                basedir: dir,
+                debug: !config.isProd
+            }).bundle((err, content) => {
+                content = lang.process(content.toString('utf8'), req.locale);
+                if (config.isProd) {
+                    content = uglify.minify(content, {fromString: true}).code;
                 }
-            }
-            next();
-        });
+                fs.writeFileSync(path.join(cacheDir, file), content, 'utf8');
+                processed[file] = true;
+                if (!config.isProd) {
+                    for (let entry of [dir, cacheDir]) {
+                        fs.watch(path.join(entry, file), {
+                            persistent: false,
+                            encoding: 'utf8'
+                        }, () => delete processed[file]);
+                    }
+                }
+                next();
+            });
+        }
     }
 }
