@@ -11,8 +11,8 @@ const type = 'metric';
 const bulkSize = 100;
 const interval = 1000;
 const buffer = [];
+const db = new Database(config.kibana, false);
 var lastIndex = null;
-const client = new Database(config.kibana, false).client;
 
 exports.getIndex = (date, cb) => {
     date = new Date(date);
@@ -29,7 +29,7 @@ exports.getIndex = (date, cb) => {
 };
 
 exports.setGeoIP = metric => {
-    if (!metric.request.ip) {
+    if (!metric.request || !metric.request.ip) {
         return;
     }
     var ip = metric.request.ip;
@@ -59,7 +59,7 @@ exports.poll = kill => {
             }, cb);
         }, err => {
             err && console.log('Unable to create index on Kibana', err);
-            client.bulk({
+            db.client.bulk({
                 body: bulkRequest
             }, err => err && console.log('Unable to send metrics to Kibana', err));
         });
@@ -73,13 +73,13 @@ exports.poll = kill => {
 
 exports.createMapping = (index, cb) => {
     async.waterfall([
-        cb => client.indices.exists({index}, cb),
+        cb => db._client.indices.exists({index}, cb),
         (exists, ignored, cb) => {
             if (exists) {
                 return cb();
             }
             console.log('Creating index', index);
-            client.indices.create({ index, body: { mappings: { [index]: config.kibana.mapping } } }, cb)
+            db._client.indices.create({ index, body: { mappings: { [index]: config.kibana.mapping } } }, cb)
         },
     ], err => cb(err, index));
 };

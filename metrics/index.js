@@ -3,15 +3,19 @@ var config = require('config');
 var path = require('path');
 
 
+const dispatcher = childProces.fork(path.join(__dirname, './dispatcher.js'), process.argv);
 const hostname = require('os').hostname();
 const application = path.basename(path.dirname(require.main.filename));
 var shutdownTimer = (process.env.NODE_SHUTDOWN_TIMER || 10);
+
+process.on('exit', () => {
+    dispatcher.kill();
+});
 
 module.exports = app => {
     if (!config.kibana.enabled) {
         return;
     }
-    const dispatcher = childProces.fork(path.join(__dirname, './dispatcher.js'), process.argv);
     app.use((req, res, next) => {
         let startTime = process.hrtime();
         req.metrics = {
@@ -43,7 +47,16 @@ module.exports = app => {
             dispatcher.disconnect();
         }, shutdownTimer * 500);
     });
-    process.on('exit', () => {
-        dispatcher.kill();
-    });
+};
+
+module.exports.dispatch = metrics => {
+    if (!metrics || !Object.keys(metrics).length) {
+        return;
+    }
+    metrics['@timestamp'] = new Date();
+    metrics.process = process.pid;
+    metrics.hostname = hostname;
+    metrics.application = application;
+    metrics.tier = config.tier;
+    dispatcher.send(metrics);
 };

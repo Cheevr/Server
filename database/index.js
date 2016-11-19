@@ -1,9 +1,9 @@
 var async = require('async');
-var Cache = require('./cache');
 var config = require('config');
 var elasticsearch = require('elasticsearch');
 var fs = require('fs');
 var path = require('path');
+var Stats = require('./stats');
 
 
 const cwd = path.dirname(require.main.filename);
@@ -21,16 +21,55 @@ class Database {
         this._opts = opts;
         this._ready = false;
         this._client = new elasticsearch.Client(this._opts.client);
-        this._cache = new Cache(this);
+        this._stats = new Stats();
+        this._cache = new (require('./' + config.cache.type))(this._stats);
+        // allow connection to be established
         setTimeout(this._createMappings.bind(this), 100);
     }
 
-    get client() {
-        return this._client;
+    middleware() {
+        return (req, res, next) => {
+            req.es = this.client;
+            req.es.ready = this.ready;
+            next();
+        }
     }
 
-    get cache() {
-        return this._cache.proxy;
+    /**
+     * Returns an ElasticSearch client that is wrapped by a caching object.
+     * @returns {Proxy.<elasticsearch.Client>}
+     */
+    get client() {
+        const that = this;
+        return new Proxy(this._client, {
+            get(target, propKey) {
+                let original = target[propKey];
+                return (params, cb) => {
+                    let cache = params.cache;
+                    delete params.cache;
+                    that._stats.request = cache ? cache : params.index + ':' + params.type + ':' + params.key;
+                    that._fetch.call(that, cache, (err, result) => {
+                        if (err || result) {
+                            return cb(err, result);
+                        }
+                        original.call(target, params, (err, results) => {
+                            if (err) {
+                                return cb(err, results);
+                            }
+                            that._store(cache, results, cb);
+                        });
+                    });
+                };
+            }
+        });
+    }
+
+    get ready() {
+        return this._ready;
+    }
+
+    get stats() {
+        return this._stats.snapshot;
     }
 
     _createMappings() {
@@ -53,11 +92,11 @@ class Database {
                     let index = this._opts.index || path.basename(file, ext);
                     let schema = require(path.join(this._dir, file));
                     tasks.push(cb => {
-                        this.client.indices.exists({index}, (err, exists) => {
+                        this._client.indices.exists({index}, (err, exists) => {
                             if (exists) {
                                 return cb();
                             }
-                            this.client.indices.create({index, body: schema}, cb);
+                            this._client.indices.create({index, body: schema}, cb);
                         });
                     });
                 }
@@ -83,16 +122,18 @@ class Database {
         });
     }
 
-    middleware() {
-        return (req, res, next) => {
-            req.es = this.cache;
-            req.es.ready = this.ready;
-            next();
+    _fetch(cache, cb) {
+        if (!cache) {
+            return cb();
         }
+        this._cache.fetch(cache, cb);
     }
 
-    get ready() {
-        return this._ready;
+    _store(cache, data, cb) {
+        if (!cache) {
+            return cb(null, data);
+        }
+        this._cache.store(cache, data, cb);
     }
 }
 

@@ -104,7 +104,7 @@ class Stats {
                 stats.keys = keys;
             }
         }
-        return stats
+        return stats;
     }
 }
 
