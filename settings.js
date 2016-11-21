@@ -5,7 +5,7 @@ var path = require('path');
 
 const cwd = path.dirname(require.main.filename);
 const viewDir = config.normalizePath(cwd, config.paths.views);
-const errorDir = config.normalizePath(cwd, config.paths.errors);
+viewDir.push(path.join(__dirname, 'static/views'));
 
 module.exports = app => {
     // Configure the jsonp callback
@@ -15,7 +15,7 @@ module.exports = app => {
     app.set('trust proxy', true);
 
     // Set view engine to pug
-    let views = viewDir.concat(errorDir).filter(dir => fs.existsSync(dir));
+    let views = viewDir.filter(dir => fs.existsSync(dir));
     app.set('view engine', 'pug');
     app.set('views', views);
 

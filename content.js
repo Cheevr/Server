@@ -15,11 +15,14 @@ const stylesDir = config.normalizePath(cwd, config.paths.styles);
 const imgDir = config.normalizePath(cwd, config.paths.img);
 const jsDir = config.normalizePath(cwd, config.paths.js);
 const cacheDir = path.isAbsolute(config.paths.cache) ? config.paths.cache : path.join(cwd, config.paths.cache);
+viewDir.push(path.join(__dirname, 'static/views'));
+stylesDir.push(path.join(__dirname, 'static/styles'));
+imgDir.push(path.join(__dirname, 'static/img'));
 
 module.exports = app => {
     // Convert stylus files to css and place them in cache dir
     for (let dir of stylesDir) {
-        fs.existsSync(stylesDir) && app.use('/css', stylus.middleware({
+        fs.existsSync(dir) && app.use('/css', stylus.middleware({
             src: dir,
             dest: cacheDir,
             compress: config.isProd,
@@ -69,6 +72,7 @@ module.exports = app => {
             }
             if (existingFiles[file]) {
                 res.render(file, {
+                    basedir: viewDir,
                     dict: lang.dictionary,
                     user: req.user
                 });
@@ -79,7 +83,7 @@ module.exports = app => {
     }
 
     // File Not Found handler
-    app.all((req, res) => {
+    app.all('*', (req, res) => {
         res.status(404).render('404', {dict: lang.dictionary.backend});
     });
 
@@ -103,6 +107,7 @@ function processJs() {
                 continue;
             }
             browserify(fullPath, {
+                paths: path.join(__dirname, 'static/js'),
                 basedir: dir,
                 debug: !config.isProd
             }).bundle((err, content) => {
@@ -123,5 +128,6 @@ function processJs() {
                 next();
             });
         }
+        next();
     }
 }
