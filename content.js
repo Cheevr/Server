@@ -3,6 +3,7 @@ const config = require('config');
 const express = require('express');
 const fs = require('fs');
 const lang = require('lang');
+const metrics = require('./metrics');
 const path = require('path');
 const Router = require('versioned-api-router');
 const stylus = require('stylus');
@@ -79,6 +80,9 @@ module.exports = app => {
             }
         });
     }
+
+    // Feedback handler
+    metrics.feedback(app);
 
     // File Not Found handler
     app.all('*', (req, res) => {

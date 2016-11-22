@@ -1,12 +1,12 @@
-var childProces = require('child_process');
-var config = require('config');
-var path = require('path');
+const childProces = require('child_process');
+const config = require('config');
+const path = require('path');
 
 
 const dispatcher = childProces.fork(path.join(__dirname, './dispatcher.js'), process.argv);
 const hostname = require('os').hostname();
 const application = path.basename(path.dirname(require.main.filename));
-var shutdownTimer = (process.env.NODE_SHUTDOWN_TIMER || 10);
+let shutdownTimer = (process.env.NODE_SHUTDOWN_TIMER || 10);
 
 process.on('exit', () => {
     dispatcher.kill();
@@ -59,4 +59,30 @@ module.exports.dispatch = metrics => {
     metrics.application = application;
     metrics.tier = config.tier;
     dispatcher.send(metrics);
+};
+
+module.exports.feedback = app => {
+    app.post('/feedback', app.noauth, (req, res) => {
+        let feedback = req.body;
+        if (!feedback.message || !feedback.message.length) {
+            return res.status(422).end();
+        }
+        req.user && (feedback.userid = req.user.id);
+        feedback.ip = req.ip;
+        feedback['@timestamp'] = new Date();
+        feedback.tier = config.tier;
+        feedback.process = process.pid;
+        feedback.hostname = hostname;
+        feedback.application = application;
+        req.es.index({
+            index: 'feedback',
+            type: 'entry',
+            body: feedback
+        }, err => {
+            if (err) {
+                throw err;
+            }
+            res.end();
+        });
+    });
 };

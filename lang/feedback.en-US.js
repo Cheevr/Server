@@ -5,5 +5,6 @@ module.exports = {
     cancel: 'Cancel',
     highlight: 'Mark Area',
     confirmation: 'This is the information we will send along with your feedback',
-    confirm: 'Confirm and Send'
+    confirm: 'Confirm and Send',
+    thankyou: 'Thank you, your feedback has been recorded.'
 };

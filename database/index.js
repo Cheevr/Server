@@ -1,25 +1,30 @@
-var async = require('async');
-var config = require('config');
-var elasticsearch = require('elasticsearch');
-var fs = require('fs');
-var path = require('path');
-var Stats = require('./stats');
+const async = require('async');
+const config = require('config');
+const elasticsearch = require('elasticsearch');
+const EventEmitter = require('events').EventEmitter;
+const fs = require('fs');
+const moment = require('moment');
+const path = require('path');
+const Stats = require('./stats');
 
 
 const cwd = path.dirname(require.main.filename);
 
-class Database {
+// TODO series retain option needs to be respected => indices older than that need to be deleted
+class Database extends EventEmitter {
     /**
      *
      * @param {object} opts The ElasticSearch options object
      * @param {string} dir  The file or directory with the mappings for all the indices
      */
     constructor(opts = config.elasticsearch, dir = config.paths.schemas) {
+        super();
         if (dir) {
             this._dir = path.isAbsolute(dir) ? dir : path.join(cwd, dir);
         }
         this._opts = opts;
         this._ready = false;
+        this._series = {};
         this._client = new elasticsearch.Client(this._opts.client);
         this._stats = new Stats();
         this._cache = new (require('./' + config.cache.type))(this._stats);
@@ -28,6 +33,11 @@ class Database {
     }
 
     middleware() {
+        this.once('ready', () => {
+            async.forEachOfSeries(config.elasticsearch.mappings, (value, key, cb) => {
+                this.createMapping(key, value, cb)
+            });
+        });
         return (req, res, next) => {
             req.es = this.client;
             req.es.ready = this.ready;
@@ -53,11 +63,16 @@ class Database {
                             if (err || result) {
                                 return cb(err, result);
                             }
-                            original.call(target, params, (err, results) => {
+                            that._processIndex(params, err => {
                                 if (err) {
                                     return cb(err, results);
                                 }
-                                that._store(cache, results, cb);
+                                original.call(target, params, (err, results) => {
+                                    if (err) {
+                                        return cb(err, results);
+                                    }
+                                    that._store(cache, results, cb);
+                                });
                             });
                         });
                     };
@@ -66,12 +81,109 @@ class Database {
         });
     }
 
+    /**
+     * Looks up whether this is a payload for a series index and replaced the index names if so. Will also create any
+     * missing indices before request.
+     * @param {object} payload
+     * @param {function} cb
+     * @private
+     */
+    _processIndex(payload, cb) {
+        // Deal with bulk requests
+        if (!payload.index && Array.isArray(payload.body)) {
+            return this._processBulk(payload, cb);
+        }
+        // Ignore non series indices
+        if (!this._series[payload.index]) {
+            return cb();
+        }
+        this._createIndex(payload.index, (err, seriesIndex) => {
+            payload.index = seriesIndex || payload.index;
+            cb(err);
+        });
+    }
+
+    /**
+     * Handles bulk requests when lookg for series indices.
+     * @param {object} payload
+     * @param {function} cb
+     * @private
+     */
+    _processBulk(payload, cb) {
+        async.eachSeries(payload.body, (entry, cb) => {
+            if (!entry.index || !this._series[entry.index]) {
+                return cb();
+            }
+            this._createIndex(entry.index._index, (err, seriesIndex) => {
+                entry.index._index = seriesIndex;
+                cb(err);
+            });
+        }, cb);
+    }
+
+    /**
+     * Will return the series index and create it if necessary.
+     * @param {string} index    The index prefix without date (e.g. logstash)
+     * @param {function} cb
+     * @private
+     */
+    _createIndex(index, cb) {
+        let series = this._series[index];
+        let date = new Date();
+        let day = date.getDate();
+        day = day > 9 ? day : '0' + day;
+        let month = date.getMonth() + 1;
+        month = month.length == 2 ? month : '0' + month;
+        let year = date.getFullYear();
+        let seriesIndex = `${index}-${year}.${month}.${day}`;
+        console.log(seriesIndex, series.lastIndex)
+        if (seriesIndex != series.lastIndex) {
+            series.lastIndex = seriesIndex;
+            return this.createMapping(seriesIndex, series.schema, err => {
+                cb(err, seriesIndex);
+            });
+        }
+        cb(null, seriesIndex);
+    }
+
+    /**
+     * Returns true of the database is ready to be used.
+     * @returns {boolean}
+     */
     get ready() {
         return this._ready;
     }
 
+    /**
+     * Returns the current statistics for cache hits and misses.
+     * @returns {CacheStats|null}
+     */
     get stats() {
         return this._stats.snapshot;
+    }
+
+    /**
+     * Creates the mapping and index if they don't already exist.
+     * @param index
+     * @param schema
+     * @param cb
+     */
+    createMapping(index, schema, cb) {
+        if (schema.series) {
+            this._series[index] = {
+                retain: moment.duration(...schema.series.retain),
+                schema: schema,
+                lastIndex: false
+            };
+            delete schema.series;
+            return;
+        }
+        this._client.indices.exists({index}, (err, exists) => {
+            if (exists || err) {
+                return cb(err);
+            }
+            this._client.indices.create({index, body: schema}, cb);
+        });
     }
 
     _createMappings() {
@@ -83,7 +195,8 @@ class Database {
                 return console.log('Unable to connect to ElasticSearch cluster', err);
             }
             if (!fs.existsSync(this._dir)) {
-                return this._ready = true;
+                this._ready = true;
+                return this.emit('ready');
             }
             let files;
             let tasks = [];
@@ -93,33 +206,20 @@ class Database {
                     let ext = path.extname(file);
                     let index = this._opts.index || path.basename(file, ext);
                     let schema = require(path.join(this._dir, file));
-                    tasks.push(cb => {
-                        this._client.indices.exists({index}, (err, exists) => {
-                            if (exists) {
-                                return cb();
-                            }
-                            this._client.indices.create({index, body: schema}, cb);
-                        });
-                    });
+                    tasks.push(cb => this.createMapping(index, schema, cb));
                 }
             } else {
                 let ext = path.extname(this._dir);
                 let index = this._opts.index || path.basename(this._dir, ext);
                 let schema = require(this._dir);
-                tasks.push(cb => {
-                    this.client.indices.exists({index}, exists => {
-                        if (exists) {
-                            return cb();
-                        }
-                        this.client.indices.create({index, body: schema}, cb);
-                    });
-                });
+                tasks.push(cb => this.createMapping(index, schema, cb));
             }
             async.parallel(tasks, err => {
                 if (err) {
                     return console.log('There was an error setting the mapping for ElasticSearch', err);
                 }
                 this._ready = true;
+                this.emit('ready');
             });
         });
     }
