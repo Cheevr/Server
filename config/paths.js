@@ -1,5 +1,3 @@
-var path = require('path');
-
 module.exports = {
     views: 'static/views',
     img: 'static/img',

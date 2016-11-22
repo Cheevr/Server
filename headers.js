@@ -1,8 +1,8 @@
-var compression = require('compression');
-var config = require('config');
-var cookieParser = require('cookie-parser');
-var lang = require('lang');
-var responseTime = require('response-time');
+const compression = require('compression');
+const config = require('config');
+const cookieParser = require('cookie-parser');
+const lang = require('lang');
+const responseTime = require('response-time');
 
 
 module.exports = app => {

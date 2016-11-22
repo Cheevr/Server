@@ -1,6 +1,6 @@
-var bodyParser = require('body-parser');
-var config = require('config');
-var helmet = require('helmet');
+const bodyParser = require('body-parser');
+const config = require('config');
+const helmet = require('helmet');
 
 
 function checkOrigin(origin) {

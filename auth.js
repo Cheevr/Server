@@ -1,5 +1,5 @@
-var config = require('config');
-var tokens = require('express-token-api-middleware');
+const config = require('config');
+const tokens = require('express-token-api-middleware');
 
 
 // Make the default authentication type token

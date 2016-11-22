@@ -1,12 +1,12 @@
-var browserify = require('browserify');
-var config = require('config');
-var express = require('express');
-var fs = require('fs');
-var lang = require('lang');
-var path = require('path');
-var Router = require('versioned-api-router');
-var stylus = require('stylus');
-var uglify = require('uglify-js');
+const browserify = require('browserify');
+const config = require('config');
+const express = require('express');
+const fs = require('fs');
+const lang = require('lang');
+const path = require('path');
+const Router = require('versioned-api-router');
+const stylus = require('stylus');
+const uglify = require('uglify-js');
 
 
 const cwd = path.dirname(require.main.filename);
@@ -30,10 +30,8 @@ module.exports = app => {
         }));
     }
 
-    // Replace language placeholders
-    for (let dir of jsDir) {
-        fs.existsSync(dir) && app.use('/js', processJs());
-    }
+    // Process all javascript files with browserify and babel
+    app.use('/js', processJs());
 
     // Serve static files
     fs.existsSync(cacheDir) && app.use('/css|/js', express.static(cacheDir));
@@ -96,6 +94,7 @@ module.exports = app => {
 
 function processJs() {
     let processed = {};
+    let returned = false;
     return (req, res, next) => {
         let file = req.originalUrl.replace(/^\/js\//, '');
         if (processed[file]) {
@@ -111,23 +110,28 @@ function processJs() {
                 basedir: dir,
                 debug: !config.isProd
             }).bundle((err, content) => {
+                if (err) {
+                    return console.log('Error compiling javascript', err);
+                }
                 content = lang.process(content.toString('utf8'), req.locale);
                 if (config.isProd) {
                     content = uglify.minify(content, {fromString: true}).code;
                 }
                 fs.writeFileSync(path.join(cacheDir, file), content, 'utf8');
-                processed[file] = true;
+                // TODO will only watch the requested file, not any of the includes
                 if (!config.isProd) {
                     for (let entry of [dir, cacheDir]) {
                         fs.watch(path.join(entry, file), {
                             persistent: false,
                             encoding: 'utf8'
-                        }, () => delete processed[file]);
+                        }, () => processed[file] = processed[file] === undefined);
                     }
                 }
-                next();
+                if (!returned) {
+                    returned = true;
+                    next();
+                }
             });
         }
-        next();
     }
 }

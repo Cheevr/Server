@@ -1,8 +1,8 @@
-var rateLimit = require('express-rate-limit');
+const rateLimit = require('express-rate-limit');
 
 
-var shutdown = false;
-var shutdownTimer = process.env.NODE_SHUTDOWN_TIMER || 10;
+let shutdownTimer = process.env.NODE_SHUTDOWN_TIMER || 10;
+let shutdown = false;
 
 module.exports = app => {
     // Health check that will gracefully signal shutdown

@@ -1,6 +1,6 @@
-var config = require('config');
-var fs = require('fs');
-var path = require('path');
+const config = require('config');
+const fs = require('fs');
+const path = require('path');
 
 
 const cwd = path.dirname(require.main.filename);

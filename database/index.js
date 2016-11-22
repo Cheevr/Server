@@ -44,22 +44,24 @@ class Database {
         return new Proxy(this._client, {
             get(target, propKey) {
                 let original = target[propKey];
-                return (params, cb) => {
-                    let cache = params.cache;
-                    delete params.cache;
-                    that._stats.request = cache ? cache : params.index + ':' + params.type + ':' + params.key;
-                    that._fetch.call(that, cache, (err, result) => {
-                        if (err || result) {
-                            return cb(err, result);
-                        }
-                        original.call(target, params, (err, results) => {
-                            if (err) {
-                                return cb(err, results);
+                if (target[propKey]) {
+                    return (params, cb) => {
+                        let cache = params.cache;
+                        delete params.cache;
+                        that._stats.request = cache ? cache : params.index + ':' + params.type + ':' + params.key;
+                        that._fetch(cache, (err, result) => {
+                            if (err || result) {
+                                return cb(err, result);
                             }
-                            that._store(cache, results, cb);
+                            original.call(target, params, (err, results) => {
+                                if (err) {
+                                    return cb(err, results);
+                                }
+                                that._store(cache, results, cb);
+                            });
                         });
-                    });
-                };
+                    };
+                }
             }
         });
     }

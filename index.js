@@ -1,10 +1,10 @@
-var config = require('config');
-var express = require('express');
-var lang = require('lang');
-var metrics = require('./metrics');
-var moment = require('moment');
-var Database = require('./database');
-var path = require('path');
+const config = require('config');
+const express = require('express');
+const lang = require('lang');
+const metrics = require('./metrics');
+const moment = require('moment');
+const Database = require('./database');
+const path = require('path');
 
 
 config.addDefaultConfig(path.join(__dirname, 'config'));
