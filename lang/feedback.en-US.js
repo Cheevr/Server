@@ -1,6 +1,10 @@
 module.exports = {
     welcome: 'Let us know what\'s on your mind',
-    placeholder: 'Bugs, feature requests or general stuff you want to tell us about.',
+    placeholder: {
+        name: 'Who are you?',
+        message: 'Bugs, feature requests or general stuff you want to tell us about.',
+        contact: 'Contact information (email, phone, etc.)'
+    },
     submit: 'Send Feedback',
     cancel: 'Cancel',
     highlight: 'Mark Area',

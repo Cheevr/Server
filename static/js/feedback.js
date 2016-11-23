@@ -1,29 +1,53 @@
 (function ($) {
-    function show(options) {
-        if (!$.isPlainObject(options)) {
-            throw new Error('Unsupported options, need to pass an object!');
+    var open = false;
+
+    function show() {
+        if (open) {
+            return;
         }
-        $('#feedbackOverlay').fadeIn();
-        $('#feedbackBox').fadeIn();
+        open = true;
+        var box = $(`
+            <div id="feedback">
+                <div class="overlay"></div>
+                <div class="box">
+                    <h2><i class="material-icons">feedback</i>R.feedback.welcome:</h2>
+                    <input type="text" class="name" placeholder="R.feedback.placeholder.name"/>
+                    <input type="text" class="contact" placeholder="R.feedback.placeholder.contact"/>
+                    <textarea placeholder="R.feedback.placeholder.message"></textarea>
+                    <button class="cancel">R.feedback.cancel</button>
+                    <button class="submit" disabled>R.feedback.submit</button>
+                </div> 
+            </div>`);
+        box.find('.cancel').on('click', hide.bind(box));
+        var submitButton = box.find('.submit');
+        submitButton.on('click', submit.bind(box));
+        var textarea = box.find('textarea');
+        textarea.on('input', function () {
+            submitButton.prop('disabled', $.trim(textarea.val()).length == 0);
+        });
+        $('body').append(box);
+        box.fadeIn();
+        box.find('.name').focus();
     }
 
     function hide() {
-        $('#feedbackBox').fadeOut();
-        $('#feedbackOverlay').fadeOut(function() {
-            $('#feedbackTextInput').val('');
+        this.fadeOut(function() {
+            this.remove();
+            open = false;
         });
-        // TODO reposition box
     }
 
     function submit() {
-        var message = $('#feedbackTextInput').val();
-        hide();
-        var feedback = $('#feedback');
-        feedback.detach();
+        var message = this.find('textarea').val();
+        var name = this.find('.name').val();
+        var contact = this.find('.contact').val();
+        hide.call(this);
+        this.detach();
         var screen = $('html').html();
-        feedback.appendTo('body');
         var navi = window.navigator;
         var payload = {
+            name: name,
+            contact: contact,
             screen: screen,
             message: message,
             agent: navi.userAgent,
@@ -32,29 +56,14 @@
             href: window.location.href
         };
         $.post('/feedback', payload, 'json').done(function() {
-            alert('R.feedback.thankyou');
+            dialog({ message: 'R.feedback.thankyou', confirm: true });
         });
     }
 
-    $.feedback = function(options) {
-        var feedback = $('<div id="feedback"></div>');
-        feedback.append($(`
-            <div id="feedbackOverlay"></div>
-            <div id="feedbackBox" class="ignore">
-                <h3>R.feedback.welcome:</h3>
-                <textarea id="feedbackTextInput" placeholder="R.feedback.placeholder"></textarea>
-                <button id="feedbackCancel">R.feedback.cancel</button>
-                <button id="feedbackSubmit">R.feedback.submit</button>
-            </div>`));
-        $('body').append(feedback);
-        $('#feedbackSubmit').on('click', submit);
-        $('#feedbackCancel').on('click', hide);
-        if (!options || !options.hide) {
-            var button = $('<div id="feedbackButton">feedback</div>');
-            button.on('click', show.bind(null, options || {}));
-            feedback.append(button);
-        } else {
-            show(options || {});
-        }
+    $.feedback = function() {
+        $('body').append(`<div id="feedbackButton">feedback</div>`);
+        var button = $('#feedbackButton');
+        button.on('click', show);
+        button.fadeIn();
     };
 }(jQuery));

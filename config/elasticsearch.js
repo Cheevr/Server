@@ -80,6 +80,8 @@ module.exports = {
                         '@timestamp': {type: 'date', format: 'strict_date_optional_time||epoch_millis'},
                         '@version': {type: 'string', index: 'not_analyzed'},
                         screen: {type: 'string'},
+                        name: {type: 'string'},
+                        contact: {type: 'string'},
                         message: {type: 'string'},
                         agent: {type: 'string'},
                         platform: {type: 'string'},

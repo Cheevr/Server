@@ -68,6 +68,7 @@ module.exports.feedback = app => {
             return res.status(422).end();
         }
         req.user && (feedback.userid = req.user.id);
+        // TODO add geoip
         feedback.ip = req.ip;
         feedback['@timestamp'] = new Date();
         feedback.tier = config.tier;
