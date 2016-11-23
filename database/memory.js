@@ -30,8 +30,24 @@ class Memory {
     store(key, data, cb) {
         this._map[key] = data;
         this._timeouts[key] && clearTimeout(this._timeouts[key]);
-        this._timeouts[key] = setTimeout(key => delete this._map[key], this._ttl);
+        this._timeouts[key] = setTimeout(key => {
+            delete this._map[key];
+            delete this._timeouts[key];
+        }, this._ttl);
         cb(null, data);
+    }
+
+    /**
+     * Removes the key if it exists in this cache and returns it via callback.
+     * @param {string} key
+     * @param {function} cb
+     */
+    remove(key, cb) {
+        let value = this._map[key];
+        delete this._map[key];
+        this._timeouts[key] && clearTimeout(this._timeouts[key]);
+        delete this._timeouts[key];
+        cb(null, value);
     }
 
     /**

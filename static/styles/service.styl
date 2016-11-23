@@ -1,15 +1,19 @@
-/* Icon Fonts */
+/*
+ * Icon Fonts
+ * @source https://material.io/icons/
+ */
 
 @font-face
   font-family 'Material Icons'
   font-style normal
   font-weight 400
+  // TODO move to static.cheevr.net (once it exists)
   src:
     local('Material Icons'),
     local('MaterialIcons-Regular'),
     url(../img/MaterialIcons.woff2) format('woff2'),
     url(../img/MaterialIcons.woff) format('woff'),
-    url(../img/MaterialIcons.ttf) format('truetype');
+    url(../img/MaterialIcons.ttf) format('truetype')
 
 .material
   font-family 'Material Icons'
@@ -26,6 +30,11 @@
   -webkit-font-feature-settings 'liga'
   -webkit-font-smoothing antialiased
 
+
+/**
+ * Social Media Fonts
+ * @source http://drinchev.github.io/monosocialiconsfont/
+ */
 
 @font-face
   font-family 'Mono Social Icons Font'
@@ -56,7 +65,9 @@
     font-size 130%
 
 
-/* Styles for services */
+/**
+ * Service Styles
+ */
 
 #feedback, #alerts
   text-align center

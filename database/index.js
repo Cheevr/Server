@@ -55,6 +55,16 @@ class Database extends EventEmitter {
             get(target, propKey) {
                 let original = target[propKey];
                 if (target[propKey]) {
+                    let delData = ['delete', 'deleteByQuery', 'update', 'updateByQuery'].reduce((status, entry) => {
+                        return status || entry == propKey;
+                    }, false);
+                    let addData = ['create', 'index', 'update', 'updateByQuery'].reduce((status, entry) => {
+                        return status || entry == propKey;
+                    }, false);
+                    let createIndex = addData || ['bulk'].reduce((status, entry) => {
+                        return status || entry == propKey;
+                    }, false);
+
                     return (params, cb) => {
                         let cache = params.cache;
                         delete params.cache;
@@ -63,15 +73,18 @@ class Database extends EventEmitter {
                             if (err || result) {
                                 return cb(err, result);
                             }
-                            that._processIndex(params, err => {
+                            that._processIndex(params, !createIndex, err => {
                                 if (err) {
-                                    return cb(err, results);
+                                    return cb(err);
                                 }
                                 original.call(target, params, (err, results) => {
                                     if (err) {
                                         return cb(err, results);
                                     }
-                                    that._store(cache, results, cb);
+                                    if (delData) {
+                                        return that._remove(cache, cb);
+                                    }
+                                    that._store(cache, addData ? params.body : results, cb);
                                 });
                             });
                         });
@@ -84,11 +97,15 @@ class Database extends EventEmitter {
     /**
      * Looks up whether this is a payload for a series index and replaced the index names if so. Will also create any
      * missing indices before request.
-     * @param {object} payload
+     * @param {object} payload  The options object passed on to ElasticSearch
+     * @param {boolean} skip    Whether to just skip this step
      * @param {function} cb
      * @private
      */
-    _processIndex(payload, cb) {
+    _processIndex(payload, skip, cb) {
+        if (skip) {
+            return cb();
+        }
         // Deal with bulk requests
         if (!payload.index && Array.isArray(payload.body)) {
             return this._processBulk(payload, cb);
@@ -236,6 +253,13 @@ class Database extends EventEmitter {
             return cb(null, data);
         }
         this._cache.store(cache, data, cb);
+    }
+
+    _remove(cache, cb) {
+        if (!cache) {
+            return cb();
+        }
+        this._cache.remove(cache, data, cb);
     }
 }
 
