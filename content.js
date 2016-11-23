@@ -59,25 +59,23 @@ module.exports = app => {
     let existingFiles = {};
     for (let dir of viewDir) {
         fs.existsSync(dir) && app.get('*', (req, res, next) => {
-            let file = req.originalUrl.replace(/^\//, '');
+            let file = req.originalUrl.replace(/^\//, '').replace(/\.(pug|html?|php|asp|jsp|py|rb|xml)$/, '');
             if (!file.length) {
-                file = 'index';
+                file = path.join(dir, 'index.pug')
             } else {
-                let ext = path.extname(file);
-                file = path.join(path.dirname(file), path.basename(file, ext));
+                file = path.join(dir, file + '.pug');
             }
             if (existingFiles[file] === undefined) {
-                existingFiles[file] = fs.existsSync(path.join(dir, file + '.pug'));
+                existingFiles[file] = fs.existsSync(file);
             }
             if (existingFiles[file]) {
-                res.render(file, {
+                return res.render(file, {
                     basedir: viewDir,
                     dict: lang.dictionary,
                     user: req.user
                 });
-            } else {
-                next();
             }
+            next();
         });
     }
 
