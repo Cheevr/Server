@@ -64,7 +64,7 @@
         open = true;
         var dialog = $(`
             <div class="alert">
-                <h2><i class="material-icons">${opts.icon}</i>${opts.title}</h2>
+                <h2><i class="material">${opts.icon}</i>${opts.title}</h2>
                 <div class="message">${opts.message}</div>
                 <input type="text" placeholder="${opts.input}"/>
                 <div class="buttons">

@@ -10,7 +10,7 @@
             <div id="feedback">
                 <div class="overlay"></div>
                 <div class="box">
-                    <h2><i class="material-icons">feedback</i>R.feedback.welcome:</h2>
+                    <h2><i class="material">feedback</i>R.feedback.welcome:</h2>
                     <input type="text" class="name" placeholder="R.feedback.placeholder.name"/>
                     <input type="text" class="contact" placeholder="R.feedback.placeholder.contact"/>
                     <textarea placeholder="R.feedback.placeholder.message"></textarea>
