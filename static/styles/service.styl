@@ -66,7 +66,44 @@
 
 
 /**
- * Service Styles
+ * Global Styles
+ */
+
+textarea, button, input
+  font-size 14px
+  background #fff
+  border 1px solid #fff
+  border-radius 2px
+  box-shadow 0 0 10px #ccc
+  padding 10px
+  &:hover
+    box-shadow 0 0 10px #999
+  &:focus
+    box-shadow 0 0 10px #9cf
+    outline none
+  &.error
+    box-shadow 0 0 10px #fbb
+  &.success
+    box-shadow 0 0 10px #cfc
+  &:disabled
+    cursor not-allowed
+    box-shadow 0 0 10px #ccc
+    color rgb( 180, 180, 180 )
+
+button
+  cursor pointer
+  padding 10px 20px
+
+input[type='checkbox']
+  height 20px
+  vertical-align middle
+  box-shadow none
+  width 20px
+  &:hover
+    outline 1px #999
+
+/**
+ * Styles for services
  */
 
 #feedback, #alerts
@@ -76,18 +113,7 @@
   margin 0
   background #fff
   textarea, button, input
-    font-size 14px
-    background #fff
-    border 1px solid #fff
-    border-radius 2px
-    box-shadow 0 0 10px #ccc
     display block
-    padding 10px
-    &:disabled
-      cursor not-allowed
-  button
-    cursor pointer
-    padding 10px 20px
   h2
     font-weight normal
     margin-left 0

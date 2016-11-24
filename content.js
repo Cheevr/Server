@@ -112,6 +112,9 @@ function processJs() {
             return next();
         }
         for (let dir of jsDir) {
+            if (returned) {
+                break;
+            }
             let fullPath = path.join(dir, file);
             if (!fs.existsSync(fullPath)) {
                 continue;
@@ -129,9 +132,10 @@ function processJs() {
                     content = uglify.minify(content, {fromString: true}).code;
                 }
                 fs.writeFileSync(path.join(cacheDir, file), content, 'utf8');
-                // TODO will only watch the requested file, not any of the includes
+                // TODO will only watch the requested file, not any of the includes in a file
                 if (!config.isProd) {
                     for (let entry of [dir, cacheDir]) {
+                        // TODO doesn't seem to work at all
                         fs.watch(path.join(entry, file), {
                             persistent: false,
                             encoding: 'utf8'
