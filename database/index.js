@@ -153,12 +153,9 @@ class Database extends EventEmitter {
         month = month.length == 2 ? month : '0' + month;
         let year = date.getFullYear();
         let seriesIndex = `${index}-${year}.${month}.${day}`;
-        console.log(seriesIndex, series.lastIndex)
         if (seriesIndex != series.lastIndex) {
             series.lastIndex = seriesIndex;
-            return this.createMapping(seriesIndex, series.schema, err => {
-                cb(err, seriesIndex);
-            });
+            return this.createMapping(seriesIndex, series.schema, err => cb(err, seriesIndex));
         }
         cb(null, seriesIndex);
     }
@@ -199,6 +196,7 @@ class Database extends EventEmitter {
             if (exists || err) {
                 return cb(err);
             }
+            err || console.log('Creating new index', seriesIndex);
             this._client.indices.create({index, body: schema}, cb);
         });
     }

@@ -16,6 +16,7 @@ const stylesDir = config.normalizePath(cwd, config.paths.styles);
 const imgDir = config.normalizePath(cwd, config.paths.img);
 const jsDir = config.normalizePath(cwd, config.paths.js);
 const cacheDir = path.isAbsolute(config.paths.cache) ? config.paths.cache : path.join(cwd, config.paths.cache);
+const existingViews = {};
 viewDir.push(path.join(__dirname, 'static/views'));
 stylesDir.push(path.join(__dirname, 'static/styles'));
 imgDir.push(path.join(__dirname, 'static/img'));
@@ -55,42 +56,50 @@ module.exports = app => {
     }
     app.use(router);
 
-    // Server view files (pug)
-    let existingFiles = {};
-    for (let dir of viewDir) {
-        fs.existsSync(dir) && app.get('*', (req, res, next) => {
-            let file = req.originalUrl.replace(/^\//, '').replace(/\.(pug|html?|php|asp|jsp|py|rb|xml)$/, '');
-            if (!file.length) {
-                file = path.join(dir, 'index.pug')
-            } else {
-                file = path.join(dir, file + '.pug');
+    // Replace rendering function to look in mutlitple locations
+    app.use((req, res, next) => {
+        let original = res.render;
+        res.render = (file, dict = lang.dictionary) => {
+            file = file.length ? file : 'index';
+            for (let dir of viewDir) {
+                let fullPath = path.join(dir, file + '.pug');
+                if (existingViews[fullPath] === undefined) {
+                    existingViews[fullPath] = fs.existsSync(fullPath);
+                }
+                if (existingViews[fullPath]) {
+                    original.call(res, fullPath, {
+                        basedir: dir,
+                        dict,
+                        user: req.user
+                    });
+                    res.done = true;
+                    return res;
+                }
             }
-            if (existingFiles[file] === undefined) {
-                existingFiles[file] = fs.existsSync(file);
-            }
-            if (existingFiles[file]) {
-                return res.render(file, {
-                    basedir: viewDir,
-                    dict: lang.dictionary,
-                    user: req.user
-                });
-            }
-            next();
-        });
-    }
+            return res;
+        };
+        next();
+    });
+
+    // Automatically serve view files if they exist.
+    app.get('*', (req, res, next) => {
+        let file = req.originalUrl.replace(/^\//, '').replace(/\.(pug|html?|php|asp|jsp|py|rb|xml)$/, '');
+        res.render(file);
+        res.done || next();
+    });
 
     // Feedback handler
     metrics.feedback(app);
 
     // File Not Found handler
     app.all('*', (req, res) => {
-        res.status(404).render('404', {dict: lang.dictionary.backend});
+        res.status(404).render(404);
     });
 
     // Error handler
     app.use(function (error, req, res, next) {
         console.error(error.stack);
-        res.status(500).render('500', { dict: lang.dictionary.backend , error });
+        res.status(500).render(500);
     });
 };
 
