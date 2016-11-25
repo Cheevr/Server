@@ -9,5 +9,6 @@ module.exports = {
     },
     placeholder: 'Please type your response here',
     cancel: 'Cancel',
-    confirm: 'Ok'
+    confirm: 'Ok',
+    legacyAlert: 'Alert Notification'
 };

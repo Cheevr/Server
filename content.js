@@ -22,6 +22,8 @@ stylesDir.push(path.join(__dirname, 'static/styles'));
 imgDir.push(path.join(__dirname, 'static/img'));
 
 module.exports = app => {
+    // TODO if coming from a mobile browser try to load file.mobile.ext first and fallback to file.ext.
+
     // Convert stylus files to css and place them in cache dir
     for (let dir of stylesDir) {
         fs.existsSync(dir) && app.use('/css', stylus.middleware({
