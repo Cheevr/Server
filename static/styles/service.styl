@@ -66,8 +66,32 @@
 
 
 /**
+ * JQuery UI
+ */
+
+.ui-tooltip
+  padding 8px
+  position absolute
+  z-index 9999
+  max-width 300px
+  -webkit-box-shadow 0 0 5px #aaa
+  box-shadow 0 0 5px #aaa
+
+* html .ui-tooltip
+  background-image none
+
+body .ui-tooltip
+  border-width 2px
+
+/**
  * Global Styles
  */
+
+a
+  text-decoration none
+  &:hover
+    text-decoration underline
+    opacity 0.9
 
 textarea, button, input
   font-size 14px
