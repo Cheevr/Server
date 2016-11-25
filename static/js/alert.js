@@ -140,6 +140,33 @@
         }
     }
 
+
+    var tooltipDefaults = {
+        show: {
+            effect: "slideDown",
+            delay: 150
+        },
+        hide: {
+            effect: "slideUp",
+        },
+        open: function () {
+            $('body > .ui-helper-hidden-accessible').remove();
+        },
+        position: {
+            my: "center top",
+            at: "center bottom+15"
+        }
+    };
+
+    function tooltip(elem, options) {
+        options = options || {};
+        if (typeof options == 'string') {
+            options = {content: options};
+        }
+        $.extend(options, tooltipDefaults, options);
+        return elem.tooltip(options);
+    }
+
     log.trace = log.bind(log, 1);
     log.debug = log.bind(log, 2);
     log.info = log.bind(log, 3);
@@ -150,6 +177,7 @@
     alert = log.info;
     window.log = log;
     window.dialog = show;
+    window.tooltip = tooltip;
 
     $('body').append(`<div id="alerts"></div>`);
 }(jQuery));
