@@ -16,8 +16,12 @@ const viewDir = config.normalizePath(cwd, config.paths.views);
 const stylesDir = config.normalizePath(cwd, config.paths.styles);
 const imgDir = config.normalizePath(cwd, config.paths.img);
 const jsDir = config.normalizePath(cwd, config.paths.js);
+const serverJsDir = path.join(__dirname, 'static/js');
+const jsScanInterval = 1000;
 const cacheDir = path.isAbsolute(config.paths.cache) ? config.paths.cache : path.join(cwd, config.paths.cache);
 const existingViews = {};
+const jsProcessed = {};
+
 viewDir.push(path.join(__dirname, 'static/views'));
 stylesDir.push(path.join(__dirname, 'static/styles'));
 imgDir.push(path.join(__dirname, 'static/img'));
@@ -37,6 +41,13 @@ module.exports = app => {
 
     // Process all javascript files with browserify and babel
     app.use('/js', processJs());
+    config.isProd || [...jsDir, serverJsDir].forEach(dir => {
+        fs.watch(dir, {interval: jsScanInterval, recursive: true}, () => {
+            Object.keys(jsProcessed).forEach(prop => delete jsProcessed[prop]);
+            clearRecursive(cacheDir, '.js');
+        });
+    });
+
 
     // Serve static files
     fs.existsSync(cacheDir) && app.use('/css|/js', express.static(cacheDir));
@@ -106,24 +117,47 @@ module.exports = app => {
     });
 };
 
+function clearRecursive(dir, filter) {
+    fs.readdir(dir, (err, files) => {
+        for (let file of files) {
+            let fullPath = path.join(dir, file);
+            if (fs.existsSync(fullPath)) {
+                let stat = fs.statSync(fullPath);
+                if (stat.isDirectory()) {
+                    clearRecursive(fullPath, filter);
+                } else {
+                    path.extname(file) == filter && fs.unlinkSync(fullPath);
+                }
+            }
+        }
+    })
+}
+
 function processJs() {
-    let processed = {};
-    let returned = false;
     return (req, res, next) => {
         let file = req.originalUrl.replace(/^\/js\//, '');
-        if (processed[file]) {
-            return next();
+        let fileProps = path.parse(file);
+        req.url = req.url.replace(fileProps.ext, '.' + req.locale + fileProps.ext);
+
+        if (jsProcessed[file]) {
+            return next('route');
         }
+
+        let targetFile = path.join(cacheDir, fileProps.dir, fileProps.name + '.' + req.locale + fileProps.ext);
+        fs.existsSync(targetFile) && fs.unlinkSync(targetFile);
+        let targetDir = path.dirname(targetFile);
+        fs.existsSync(targetDir) || fs.mkdirSync(targetDir);
+        let returned = false;
+
+
         for (let dir of jsDir) {
-            if (returned) {
-                break;
-            }
-            let fullPath = path.join(dir, file);
-            if (!fs.existsSync(fullPath)) {
+            let sourceFile = path.join(dir, file);
+            if (!fs.existsSync(sourceFile)) {
                 continue;
             }
-            browserify(fullPath, {
-                paths: path.join(__dirname, 'static/js'),
+
+            browserify(sourceFile, {
+                paths: serverJsDir,
                 basedir: dir,
                 debug: !config.isProd
             }).transform(babelify, {
@@ -136,20 +170,11 @@ function processJs() {
                 if (config.isProd) {
                     content = uglify.minify(content, {fromString: true}).code;
                 }
-                fs.writeFileSync(path.join(cacheDir, file), content, 'utf8');
-                // TODO will only watch the requested file, not any of the includes in a file
-                if (!config.isProd) {
-                    for (let entry of [dir, cacheDir]) {
-                        // TODO doesn't seem to work at all
-                        fs.watch(path.join(entry, file), {
-                            persistent: false,
-                            encoding: 'utf8'
-                        }, () => processed[file] = processed[file] === undefined);
-                    }
-                }
+                fs.writeFileSync(targetFile, content, 'utf8');
+                jsProcessed[file] = true;
                 if (!returned) {
                     returned = true;
-                    next();
+                    next('route');
                 }
             });
         }
