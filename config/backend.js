@@ -7,4 +7,4 @@ exports.maxBodySize = '10mb';
 exports.allowedHosts = ['localhost:' + exports.port];
 
 // Cache time in seconds for css, js and images
-exports.cacheTime = 3600;
+exports.cacheTime = 86400000;

@@ -50,8 +50,8 @@ module.exports = app => {
 
 
     // Serve static files
-    fs.existsSync(cacheDir) && app.use('/css|/js', express.static(cacheDir));
-    let staticConfig = config.isProd ? { maxAge: 86400000 } : {};
+    let staticConfig = config.isProd ? { maxAge: config.backend.cacheTime } : {};
+    fs.existsSync(cacheDir) && app.use('/css|/js', express.static(cacheDir, staticConfig));
     for (let dir of imgDir) {
         fs.existsSync(dir) && app.use('/img', express.static(dir, staticConfig));
     }

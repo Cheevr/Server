@@ -18,7 +18,7 @@ module.exports = app => {
 
     // Set up cross domain security
     app.use((req, res, next) => {
-        var origin = req.headers.origin || req.headers.referer;
+        let origin = req.headers.origin || req.headers.referer;
         if (origin) {
             if (!checkOrigin(origin)) {
                 return res.status(405).end('Unknown origin');
