@@ -1,5 +1,5 @@
-var defaultDisplayTime = 5000;
-var open = false;
+const defaultDisplayTime = 5000;
+let open = false;
 
 /**
  * @typedef {object} DialogOpts
@@ -20,7 +20,7 @@ var open = false;
  * Sets default options for the dialog options
  * @param {DialogOpts} opts
  */
-exports.fillDefaults = function(opts) {
+exports.fillDefaults = opts => {
     opts.level = opts.level || 3;
     opts.input = opts.input === true ? 'R.alert.placeholder' : opts.input;
     switch (opts.level) {
@@ -50,7 +50,7 @@ exports.fillDefaults = function(opts) {
  * Creates a new dialog and attaches it to the html body.
  * @param {DialogOpts} opts
  */
-exports.show = function(opts) {
+exports.show = opts => {
     if (open) {
         // TODO instead just queue up dialogs
         throw new Error('The previous dialog was not closed');
@@ -60,7 +60,7 @@ exports.show = function(opts) {
     }
     exports.fillDefaults(opts);
     open = true;
-    var dialog = $(`
+    let dialog = $(`
         <div class="alert">
             <h2><i class="material">${opts.icon}</i>${opts.title}</h2>
             <div class="message">${opts.message}</div>
@@ -73,12 +73,12 @@ exports.show = function(opts) {
     $('#alerts').append(dialog).addClass('open');
     dialog.fadeIn();
 
-    var input = dialog.find('input');
+    let input = dialog.find('input');
     opts.input ? input.focus() : input.remove();
 
-    var autoclose = defaultDisplayTime;
+    let autoclose = defaultDisplayTime;
     $.each(['cancel', 'confirm'], function(i, handler) {
-        var button = dialog.find('.' + handler);
+        let button = dialog.find('.' + handler);
         if (!opts[handler]) {
             return button.remove();
         }
@@ -103,7 +103,7 @@ exports.show = function(opts) {
  * Removes the dialog and ends the modal screen.
  * @param {object} dialog
  */
-exports.hide = function(dialog) {
+exports.hide = dialog => {
     dialog.fadeOut(function() {
         $('#alerts').removeClass('open');
         dialog.remove();
@@ -129,12 +129,7 @@ exports.log = function (level, message, confirm, cancel) {
     }
     console.log(`Log (${level}): ${message}`);
     if (level < this.level || 3) {
-        exports.show({
-            level: level,
-            message: message,
-            cancel: cancel,
-            confirm: confirm
-        });
+        exports.show({ level, message, cancel, confirm });
     }
 };
 
@@ -147,7 +142,7 @@ exports.warn = exports.log.warn = log.bind(log, 4);
 exports.error = exports.log.error = log.bind(log, 5);
 exports.dialog = window.dialog = exports.show;
 
-alert = function(message) {
+alert = message => {
     exports.show    ({
         message: message,
         confirm: true,

@@ -1,3 +1,4 @@
+const babelify = require('babelify');
 const browserify = require('browserify');
 const config = require('config');
 const express = require('express');
@@ -125,6 +126,8 @@ function processJs() {
                 paths: path.join(__dirname, 'static/js'),
                 basedir: dir,
                 debug: !config.isProd
+            }).transform(babelify, {
+                presets: ['es2015']
             }).bundle((err, content) => {
                 if (err) {
                     return console.log('Error compiling javascript', err);

@@ -15,13 +15,10 @@ var tooltipDefaults = {
     }
 };
 
-function tooltip(elem, options) {
-    options = options || {};
+exports.tooltip = window.tooltip = (elem, options = {}) => {
     if (typeof options == 'string') {
         options = {content: options};
     }
     $.extend(options, tooltipDefaults, options);
     return elem.tooltip(options);
-}
-
-exports.tooltip = window.tooltip = tooltip;
+};

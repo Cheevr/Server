@@ -196,7 +196,7 @@ class Database extends EventEmitter {
             if (exists || err) {
                 return cb(err);
             }
-            err || console.log('Creating new index', seriesIndex);
+            err || console.log('Creating new index', index);
             this._client.indices.create({index, body: schema}, cb);
         });
     }

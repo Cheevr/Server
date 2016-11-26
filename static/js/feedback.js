@@ -1,11 +1,11 @@
-var open = false;
+let open = false;
 
-function show() {
+exports.show = () => {
     if (open) {
         return;
     }
     open = true;
-    var box = $(`
+    let box = $(`
         <div id="feedback">
             <div class="overlay"></div>
             <div class="box">
@@ -17,51 +17,44 @@ function show() {
                 <button class="submit" disabled>R.feedback.submit</button>
             </div> 
         </div>`);
-    box.find('.cancel').on('click', hide.bind(box));
-    var submitButton = box.find('.submit');
-    submitButton.on('click', submit.bind(box));
-    var textarea = box.find('textarea');
-    textarea.on('input', function () {
-        submitButton.prop('disabled', $.trim(textarea.val()).length == 0);
-    });
+    box.find('.cancel').on('click', exports.hide.bind(null, box));
+    let submitButton = box.find('.submit');
+    submitButton.on('click', exports.submit.bind(null, box));
+    let textarea = box.find('textarea');
+    textarea.on('input', () => submitButton.prop('disabled', $.trim(textarea.val()).length == 0));
     $('body').append(box);
     box.fadeIn();
     box.find('.name').focus();
-}
+};
 
-function hide() {
-    this.fadeOut(function() {
-        this.remove();
+exports.hide = box => {
+    box.fadeOut(function() {
+        box.remove();
         open = false;
     });
-}
+};
 
-function submit() {
-    var message = this.find('textarea').val();
-    var name = this.find('.name').val();
-    var contact = this.find('.contact').val();
-    hide.call(this);
-    this.detach();
-    var screen = $('html').html();
-    var navi = window.navigator;
-    var payload = {
-        name: name,
-        contact: contact,
-        screen: screen,
-        message: message,
+exports.submit = box => {
+    let message = box.find('textarea').val();
+    let name = box.find('.name').val();
+    let contact = box.find('.contact').val();
+    exports.hide(box);
+    box.detach();
+    let screen = $('html').html();
+    let navi = window.navigator;
+    let payload = {
+        name, contact, screen, message,
         agent: navi.userAgent,
         platform: navi.platform,
         language: navi.userLanguage || navi.language,
         href: window.location.href
     };
-    $.post('/feedback', payload, 'json').done(function() {
-        dialog({ message: 'R.feedback.thankyou', confirm: true });
-    });
-}
+    $.post('/feedback', payload, 'json').done(() => dialog({ message: 'R.feedback.thankyou', confirm: true }));
+};
 
-module.exports = function() {
+exports.button = () => {
     $('body').append(`<div id="feedbackButton">feedback</div>`);
-    var button = $('#feedbackButton');
-    button.on('click', show);
+    let button = $('#feedbackButton');
+    button.on('click', exports.show);
     button.fadeIn();
 };

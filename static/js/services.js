@@ -5,19 +5,19 @@ var defaults = {
     tooltip: true
 };
 
-exports.init = function(options) {
+exports.init = options => {
     options = $.extend({}, defaults, options);
-    Object.keys(options).forEach(function(elem) {
-        if (!options[elem]) {
-            return;
+    for (let key of Object.keys(options)) {
+        if (!options[key]) {
+            continue;
         }
-        switch(elem) {
+        switch(key) {
             case 'feedback':
-                var feedback = require('feedback');
-                !options.feedback.hide && feedback();
+                let feedback = require('feedback');
+                !options.feedback.hide && feedback.button();
                 break;
             case 'regex':
-                var regex = require('regex');
+                let regex = require('regex');
                 !options.regex.noGlobal && (window.regex = regex);
                 break;
             case 'dialog':
@@ -27,5 +27,5 @@ exports.init = function(options) {
                 require('tooltip');
                 break;
         }
-    });
+    }
 };
