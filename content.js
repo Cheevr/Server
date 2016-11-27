@@ -97,7 +97,7 @@ module.exports = app => {
 
     // Automatically serve view files if they exist.
     app.get('*', (req, res, next) => {
-        let file = req.originalUrl.replace(/^\//, '').replace(/\.(pug|html?|php|asp|jsp|py|rb|xml)$/, '');
+        let file = req.path.replace(/^\//, '').replace(/\.(pug|html?|php|asp|jsp|py|rb|xml)$/, '');
         res.render(file);
         res.done || next();
     });
