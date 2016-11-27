@@ -1,5 +1,6 @@
 const defaultDisplayTime = 5000;
 let open = false;
+let queue = [];
 
 /**
  * @typedef {object} DialogOpts
@@ -51,12 +52,11 @@ exports.fillDefaults = opts => {
  * @param {DialogOpts} opts
  */
 exports.show = opts => {
-    if (open) {
-        // TODO instead just queue up dialogs
-        throw new Error('The previous dialog was not closed');
-    }
     if (!opts.message) {
         throw new Error('A dialog was created without specifying a message');
+    }
+    if (open) {
+        return queue.push(opts);
     }
     exports.fillDefaults(opts);
     open = true;
@@ -131,6 +131,9 @@ exports.hide = dialog => {
         $('#alerts').removeClass('open');
         dialog.remove();
         open = false;
+        if (queue.length) {
+            exports.show(queue.shift());
+        }
     });
 };
 
