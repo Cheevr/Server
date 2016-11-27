@@ -60,6 +60,7 @@ exports.show = opts => {
     }
     exports.fillDefaults(opts);
     open = true;
+    let alerts = $('#alerts');
     let dialog = $(`
         <div class="alert">
             <h2><i class="material">${opts.icon}</i>${opts.title}</h2>
@@ -69,13 +70,15 @@ exports.show = opts => {
                 <button class="cancel">R.alert.cancel</button>
                 <button class="confirm">R.alert.confirm</button>
             </div>
+            
         </div>`);
-    $('#alerts').append(dialog).addClass('open');
+    alerts.append(dialog).addClass('open');
     dialog.fadeIn();
 
     let input = dialog.find('input');
     opts.input ? input.focus() : input.remove();
 
+    let hide = exports.hide.bind(null, dialog);
     let autoclose = defaultDisplayTime;
     $.each(['cancel', 'confirm'], function(i, handler) {
         let button = dialog.find('.' + handler);
@@ -91,9 +94,14 @@ exports.show = opts => {
                 opts[handler](event);
             });
         }
-        button.on('click', exports.hide.bind(null, dialog));
+        button.on('click', hide);
     });
-    autoclose && setTimeout(exports.hide.bind(null, dialog), autoclose);
+    if (autoclose) {
+        alerts.one('click', hide);
+        let countdown = $('<div class="countdown"></div>');
+        dialog.append(countdown);
+        countdown.delay(500).animate({width: 0, opacity: 1}, autoclose - 500, hide);
+    }
     if (!dialog.find('button').length) {
         dialog.find('.buttons').remove();
     }

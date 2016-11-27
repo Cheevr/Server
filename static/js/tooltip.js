@@ -17,8 +17,8 @@ var tooltipDefaults = {
 
 exports.tooltip = window.tooltip = (elem, options = {}) => {
     if (typeof options == 'string') {
-        options = {content: options};
+        options = { content: options };
     }
-    $.extend(options, tooltipDefaults, options);
+    options = Object.assign({}, tooltipDefaults, options);
     return elem.tooltip(options);
 };
