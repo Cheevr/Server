@@ -75,9 +75,6 @@ exports.show = opts => {
     alerts.append(dialog).addClass('open');
     dialog.fadeIn();
 
-    let input = dialog.find('input');
-    opts.input ? input.focus() : input.remove();
-
     let hide = exports.hide.bind(null, dialog);
     let autoclose = defaultDisplayTime;
     $.each(['cancel', 'confirm'], function(i, handler) {
@@ -96,6 +93,24 @@ exports.show = opts => {
         }
         button.on('click', hide);
     });
+    // Escape to close window (unless you have to confirm)
+    if (opts.cancel || !opts.confirm) {
+        $(document).on('keyup', event => {
+            let keyCode = event.keyCode || event.which;
+            keyCode == 27 && dialog.find('.cancel').click();
+        });
+    }
+    // Enter to submit on input
+    let input = dialog.find('input');
+    if (opts.input) {
+        input.on('keyup', event => {
+            let keyCode = event.keyCode || event.which;
+            keyCode == 13 && dialog.find('.confirm').click();
+        }).focus();
+    } else {
+        input.remove();
+    }
+    // Automatic closing dialogs
     if (autoclose) {
         alerts.one('click', hide);
         let countdown = $('<div class="countdown"></div>');
