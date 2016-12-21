@@ -42,7 +42,7 @@ module.exports = app => {
     // Process all javascript files with browserify and babel
     app.use('/js', processJs());
     config.isProd || [...jsDir, serverJsDir].forEach(dir => {
-        fs.watch(dir, {interval: jsScanInterval, recursive: true}, () => {
+        fs.existsSync(dir) && fs.watch(dir, {interval: jsScanInterval, recursive: true}, () => {
             Object.keys(jsProcessed).forEach(prop => delete jsProcessed[prop]);
             clearRecursive(cacheDir, '.js');
         });
