@@ -1,7 +1,10 @@
 module.exports = {
     enabled: true,
+    index: 'logstash',
+    type: 'metric',
+    process: 'metrics-dispatcher',
     client: {
-        host: 'logs.cheevr.net:9200',
+        host: 'localhost:9200',
         apiVersion: '5.0'
     }
 };

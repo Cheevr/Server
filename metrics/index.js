@@ -3,6 +3,11 @@ const config = require('config');
 const path = require('path');
 
 
+if (!config.kibana.enabled) {
+    module.exports = () => {};
+    return;
+}
+
 const dispatcher = childProces.fork(path.join(__dirname, './dispatcher.js'), process.argv);
 const hostname = require('os').hostname();
 const application = path.basename(path.dirname(require.main.filename));
@@ -13,9 +18,6 @@ process.on('exit', () => {
 });
 
 module.exports = app => {
-    if (!config.kibana.enabled) {
-        return;
-    }
     app.use((req, res, next) => {
         let startTime = process.hrtime();
         req.metrics = {

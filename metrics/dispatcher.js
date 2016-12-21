@@ -5,10 +5,10 @@ const geoip = require('geoip-lite');
 const path = require('path');
 
 
-process.title = 'cheevr-metrics' + ' tier:' + config.tier;
 config.addDefaultConfig(path.join(__dirname, '../config'));
-const index = 'logstash';
-const type = 'metric';
+process.title = config.kibana.process + ' tier:' + config.tier;
+const index = config.kibana.index;
+const type = config.kibana.type;
 const bulkSize = 100;
 const interval = 1000;
 const buffer = [];
