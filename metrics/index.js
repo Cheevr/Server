@@ -62,30 +62,3 @@ module.exports.dispatch = metrics => {
     metrics.tier = config.tier;
     dispatcher.send(metrics);
 };
-
-module.exports.feedback = app => {
-    app.post('/feedback', app.noauth, (req, res) => {
-        let feedback = req.body;
-        if (!feedback.message || !feedback.message.length) {
-            return res.status(422).end();
-        }
-        req.user && (feedback.userid = req.user.id);
-        // TODO add geoip
-        feedback.ip = req.ip;
-        feedback['@timestamp'] = new Date();
-        feedback.tier = config.tier;
-        feedback.process = process.pid;
-        feedback.hostname = hostname;
-        feedback.application = application;
-        req.es.index({
-            index: 'feedback',
-            type: 'entry',
-            body: feedback
-        }, err => {
-            if (err) {
-                throw err;
-            }
-            res.end();
-        });
-    });
-};

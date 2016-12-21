@@ -18,5 +18,7 @@ module.exports = app => {
 
         app.auth = tokens(config.auth);
         app.noauth = tokens(noAuthConfig);
+    } else {
+        app.auth = app.noauth = (req, res, next) => next();
     }
 };
