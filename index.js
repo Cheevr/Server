@@ -7,12 +7,18 @@ const Database = require('./database');
 const path = require('path');
 
 
+// Set default server config
 config.addDefaultConfig(path.join(__dirname, 'config'));
 lang.addDirectory(path.join(__dirname, 'lang'));
+
 const app = express();
 const db = new Database();
+
 app.use(db.middleware());
-setInterval(() => metrics.dispatch({cache: db.stats}), moment.duration(...config.cache.stats.interval).asMilliseconds());
+metrics.dispatch && setInterval(
+    () => metrics.dispatch({cache: db.stats}),
+    moment.duration(...config.cache.stats.interval).asMilliseconds()
+);
 
 require('./settings')(app);
 metrics(app);
