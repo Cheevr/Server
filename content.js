@@ -75,7 +75,9 @@ module.exports = app => {
     app.use((req, res, next) => {
         let original = res.render;
         res.render = (file, dict = lang.dictionary) => {
+            file = String(file);
             file = file.length ? file : 'index';
+            console.log('rendering', file)
             for (let dir of viewDir) {
                 let fullPath = path.join(dir, file + '.pug');
                 if (existingViews[fullPath] === undefined) {
