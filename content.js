@@ -108,13 +108,23 @@ module.exports = app => {
 
     // File Not Found handler
     app.all('*', (req, res) => {
-        res.status(404).render(404);
+        res.status(404);
+        let acceptType = req.headers['accept'] || '';
+        if (acceptType.indexOf('html') !== -1) {
+            return res.render(404);
+        }
+        res.end();
     });
 
     // Error handler
     app.use(function (error, req, res, next) {
         console.error(error.stack);
-        res.status(500).render(500);
+        res.status(500);
+        let acceptType = req.headers['accept'];
+        if (acceptType && acceptType.indexOf('html') !== 0) {
+            return res.render(500);
+        }
+        res.end();
     });
 };
 
