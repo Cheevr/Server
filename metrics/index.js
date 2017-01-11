@@ -1,13 +1,11 @@
 const childProces = require('child_process');
 const config = require('config');
 const path = require('path');
+const shortId = require('shortid');
 
 
-if (!config.kibana.enabled) {
-    module.exports = () => {};
-    return;
-}
-
+// Regex safe short ids
+shortId.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@_');
 const dispatcher = childProces.fork(path.join(__dirname, './dispatcher.js'), process.argv);
 const hostname = require('os').hostname();
 const application = path.basename(path.dirname(require.main.filename));
@@ -20,6 +18,7 @@ process.on('exit', () => {
 module.exports = app => {
     app.use((req, res, next) => {
         let startTime = process.hrtime();
+        req.id = req.get('id') || shortId.generate();
         req.metrics = {
             '@timestamp': new Date(),
             process: process.pid,
@@ -32,7 +31,7 @@ module.exports = app => {
                 ip: req.ip
             }
         };
-        res.on('finish', function () {
+        res.on('finish', () => {
             let endTime = process.hrtime(startTime);
             let time = Math.round(endTime[0] * 1e3 + endTime[1] * 1e-6);
             let status = res.statusCode;
@@ -40,15 +39,19 @@ module.exports = app => {
             req.args && (req.metrics.request.args = req.args);
             req.metrics.request.size = req.socket.bytesRead;
             req.metrics.response = { status, size, time };
-            dispatcher.send(req.metrics);
+            if (config.kibana.enabled) {
+                dispatcher.send(req.metrics);
+            }
         });
         next();
     });
-    app.on('shutdown', () => {
-        setTimeout(() => {
-            dispatcher.disconnect();
-        }, shutdownTimer * 500);
-    });
+    if (config.kibana.enabled) {
+        app.on('shutdown', () => {
+            setTimeout(() => {
+                dispatcher.disconnect();
+            }, shutdownTimer * 500);
+        });
+    }
 };
 
 module.exports.dispatch = metrics => {

@@ -1,27 +1,28 @@
+const path = require('path');
 const config = require('config');
-const express = require('express');
+// Set default server config
+config.addDefaultConfig(path.join(__dirname, 'config'));
+// Set default server translations
 const lang = require('lang');
+lang.addDirectory(path.join(__dirname, 'lang'));
+
+const express = require('express');
+const Logger = require('./logger');
 const metrics = require('./metrics');
 const moment = require('moment');
 const Database = require('./database');
-const path = require('path');
-
-
-// Set default server config
-config.addDefaultConfig(path.join(__dirname, 'config'));
-lang.addDirectory(path.join(__dirname, 'lang'));
 
 const app = express();
 const db = new Database();
-
 app.use(db.middleware());
-metrics.dispatch && setInterval(
+config.kibana.enabled && setInterval(
     () => metrics.dispatch({cache: db.stats}),
     moment.duration(...config.cache.stats.interval).asMilliseconds()
 );
 
 require('./settings')(app);
 metrics(app);
+app.use(Logger.middleware);
 require('./security')(app);
 require('./status')(app);
 require('./headers')(app);

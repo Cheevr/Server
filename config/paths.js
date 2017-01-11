@@ -5,5 +5,6 @@ module.exports = {
     styles: 'static/styles',
     cache: 'cache',
     routes: 'routes',
-    schemas: 'config/schemas'
+    schemas: 'config/schemas',
+    logs: 'logs'
 };

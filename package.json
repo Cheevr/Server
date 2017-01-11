@@ -22,8 +22,8 @@
   },
   "dependencies": {
     "async": "^2",
-    "babel-preset-es2015": "^6.18.0",
-    "babelify": "^7.3.0",
+    "babel-preset-es2015": "^6",
+    "babelify": "^7",
     "body-parser": "^1",
     "browserify": "^13",
     "compression": "^1",
@@ -36,12 +36,14 @@
     "geoip-lite": "^1",
     "helmet": "^3",
     "lang": "https://github.com/Cheevr/Lang.git",
-    "lodash": "^4.17.2",
+    "lodash": "^4",
     "moment": "^2",
     "pug": "^2.0.0-beta6",
     "response-time": "^2",
+    "shortid": "^2",
     "stylus": "^0.54",
     "uglify-js": "^2",
-    "versioned-api-router": "^0.6"
+    "versioned-api-router": "^0.6",
+    "winston": "^2"
   }
 }
