@@ -1,7 +1,7 @@
 const compression = require('compression');
-const config = require('config');
+const config = require('cheevr-config');
 const cookieParser = require('cookie-parser');
-const lang = require('lang');
+const lang = require('cheevr-lang');
 const responseTime = require('response-time');
 
 

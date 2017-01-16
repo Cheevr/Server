@@ -1,5 +1,5 @@
-var config = require('config');
-var moment = require('moment');
+const config = require('cheevr-config');
+const moment = require('moment');
 
 
 /**

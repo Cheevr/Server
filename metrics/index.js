@@ -1,5 +1,5 @@
 const childProces = require('child_process');
-const config = require('config');
+const config = require('cheevr-config');
 const path = require('path');
 const shortId = require('shortid');
 

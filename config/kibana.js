@@ -5,7 +5,8 @@ module.exports = {
     process: 'metrics-dispatcher',
     client: {
         host: 'localhost:9200',
-        apiVersion: '5.0'
+        apiVersion: '5.0',
+        log: false
     },
     mappings: {
         kibana: {

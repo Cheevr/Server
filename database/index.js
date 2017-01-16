@@ -1,8 +1,9 @@
 const async = require('async');
-const config = require('config');
+const config = require('cheevr-config');
 const elasticsearch = require('elasticsearch');
 const EventEmitter = require('events').EventEmitter;
 const fs = require('fs');
+const Logger = require('cheevr-logging');
 const moment = require('moment');
 const path = require('path');
 const Stats = require('./stats');
@@ -25,11 +26,24 @@ class Database extends EventEmitter {
         this._opts = opts;
         this._ready = false;
         this._series = {};
+        this._setLogging();
         this._client = new elasticsearch.Client(this._opts.client);
         this._stats = new Stats();
         this._cache = new (require('./' + config.cache.type))(this._stats);
         // allow connection to be established
         setTimeout(this._createMappings.bind(this), 100);
+    }
+
+    _setLogging() {
+        let log = Logger.elasticsearch;
+        function LogToWinston() {
+            this.error = log.error.bind(log);
+            this.warning = log.warn.bind(log);
+            this.info = log.info.bind(log);
+            this.debug = log.debug.bind(log);
+            this.trace = this.close = () => {};
+        }
+        this._opts.client.log = LogToWinston;
     }
 
     middleware() {

@@ -1,11 +1,12 @@
-const async = require('async');
-const config = require('config');
-const Database = require('../database/index');
-const geoip = require('geoip-lite');
 const path = require('path');
-
-
+const config = require('cheevr-config');
 config.addDefaultConfig(path.join(__dirname, '../config'));
+
+const async = require('async');
+const Database = require('../database');
+const geoip = require('geoip-lite');
+const Logger = require('cheevr-logging');
+
 process.title = config.kibana.process + ' tier:' + config.tier;
 const index = config.kibana.index;
 const type = config.kibana.type;
@@ -50,7 +51,6 @@ exports.poll = kill => {
     }
     if (kill) {
         clearInterval(timeout);
-        console.log('Metrics dispatcher terminated');
         process.exit();
     }
 };
@@ -63,3 +63,4 @@ process.stdout.resume();
 process.stdout.on('end', () => process.exit());
 
 let timeout = setInterval(exports.poll, interval);
+Logger.server.info('Dispatcher is running')

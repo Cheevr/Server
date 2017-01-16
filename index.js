@@ -1,13 +1,13 @@
 const path = require('path');
-const config = require('config');
+const config = require('cheevr-config');
 // Set default server config
 config.addDefaultConfig(path.join(__dirname, 'config'));
 // Set default server translations
-const lang = require('lang');
+const lang = require('cheevr-lang');
 lang.addDirectory(path.join(__dirname, 'lang'));
 
 const express = require('express');
-const Logger = require('./logger');
+const Logger = require('logging');
 const metrics = require('./metrics');
 const moment = require('moment');
 const Database = require('./database');
@@ -31,5 +31,5 @@ require('./content')(app);
 
 // Server Startup
 app.listen(config.backend.port);
-console.log('listening on port', config.backend.port, 'with tier', config.tier);
+Logger.server.info('listening on port %s with tier %s', config.backend.port, config.tier);
 

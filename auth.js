@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const config = require('config');
+const config = require('cheevr-config');
 const tokens = require('express-token-api-middleware');
 
 
