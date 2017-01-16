@@ -7,7 +7,7 @@ const lang = require('cheevr-lang');
 lang.addDirectory(path.join(__dirname, 'lang'));
 
 const express = require('express');
-const Logger = require('logging');
+const Logger = require('cheevr-logging');
 const metrics = require('./metrics');
 const moment = require('moment');
 const Database = require('./database');
