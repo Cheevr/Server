@@ -1,4 +1,6 @@
 module.exports = {
+    // Name of the logger to use configured in logging.js config
+    logger: 'elasticsearch',
     client: {
         host:'localhost:9200',
         log: 'info',

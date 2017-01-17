@@ -1,4 +1,5 @@
 module.exports = {
+    logger: 'elasticsearch',
     enabled: true,
     index: 'logstash',
     type: 'metric',

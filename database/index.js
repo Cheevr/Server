@@ -35,15 +35,18 @@ class Database extends EventEmitter {
     }
 
     _setLogging() {
-        let log = Logger.elasticsearch;
-        function LogToWinston() {
-            this.error = log.error.bind(log);
-            this.warning = log.warn.bind(log);
-            this.info = log.info.bind(log);
-            this.debug = log.debug.bind(log);
-            this.trace = this.close = () => {};
+        let log = Logger[this._opts.logger];
+        if (log) {
+            function LogToWinston() {
+                this.error = log.error.bind(log);
+                this.warning = log.warn.bind(log);
+                this.info = log.info.bind(log);
+                this.debug = log.debug.bind(log);
+                this.trace = this.close = () => {
+                };
+            }
+            this._opts.client.log = LogToWinston;
         }
-        this._opts.client.log = LogToWinston;
     }
 
     middleware() {
