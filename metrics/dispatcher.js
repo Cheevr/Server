@@ -2,6 +2,7 @@ const path = require('path');
 const config = require('cheevr-config');
 config.addDefaultConfig(path.join(__dirname, '../config'));
 
+
 const async = require('async');
 const Database = require('../database');
 const geoip = require('geoip-lite');
@@ -63,4 +64,4 @@ process.stdout.resume();
 process.stdout.on('end', () => process.exit());
 
 let timeout = setInterval(exports.poll, interval);
-Logger.server.info('Dispatcher is running')
+Logger.server.info('Dispatcher is running');

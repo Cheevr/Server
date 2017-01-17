@@ -9,7 +9,7 @@ const path = require('path');
 const Stats = require('./stats');
 
 
-const cwd = path.dirname(require.main.filename);
+const cwd = process.cwd();
 
 // TODO series retain option needs to be respected => indices older than that need to be deleted
 class Database extends EventEmitter {

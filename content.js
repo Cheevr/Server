@@ -10,7 +10,7 @@ const stylus = require('stylus');
 const uglify = require('uglify-js');
 
 
-const cwd = path.dirname(require.main.filename);
+const cwd = process.cwd();
 const hostname = require('os').hostname();
 const application = path.basename(path.dirname(require.main.filename));
 const viewDir = config.normalizePath(cwd, config.paths.views);
