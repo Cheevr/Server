@@ -47,7 +47,11 @@ if (!config.kibana.enabled) {
 
 // Start a dispatched service that will take care of bulk importing metrics into kibana.
 const cwd = process.cwd();
-const dispatcher = childProces.fork(path.join(__dirname, './dispatcher.js'), [], { cwd, env: process.env });
+const dispatcher = childProces.fork(path.join(__dirname, './dispatcher.js'), [], {
+    cwd,
+    env: process.env,
+    execArgv: ['--max_old_space_size=' + config.kibana.memory]
+});
 const shutdownTimer = (process.env.NODE_SHUTDOWN_TIMER || 10) * 500;
 
 process.on('exit', () => {

@@ -13,7 +13,7 @@ const tokens = require('express-token-api-middleware');
  */
 module.exports = app => {
     if (config.auth) {
-        let noAuthConfig = _.cloneDeep(config);
+        let noAuthConfig = _.cloneDeep(config.auth);
         noAuthConfig.error = (req, res, next) => next();
 
         app.auth = tokens(config.auth);
