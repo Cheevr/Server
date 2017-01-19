@@ -109,12 +109,10 @@ module.exports = app => {
 
     // File Not Found handler
     app.use((req, res) => {
-        if (!req.socket.bytesWritten) {
-            res.status(404);
-            let acceptType = req.headers['accept'] || '';
-            if (acceptType.indexOf('html') !== -1) {
-                return res.render(404);
-            }
+        res.status(404);
+        let acceptType = req.headers['accept'] || '';
+        if (acceptType.indexOf('html') !== -1) {
+            return res.render(404);
         }
         res.end();
     });
