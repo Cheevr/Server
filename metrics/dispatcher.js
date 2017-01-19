@@ -64,4 +64,4 @@ process.stdout.resume();
 process.stdout.on('end', () => process.exit());
 
 let timeout = setInterval(exports.poll, interval);
-Logger.server.info('Dispatcher is running');
+Logger.server.info('Dispatcher is running with tier', config.tier);

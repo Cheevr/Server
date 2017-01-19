@@ -10,7 +10,7 @@ const cwd = process.cwd();
 const viewDir = config.normalizePath(cwd, config.paths.views);
 viewDir.push(path.join(__dirname, 'static/views'));
 
-if (config.backend.printConfig) {
+if (config.printConfig) {
     function clean(obj) {
         for (let prop in obj) {
             let val = obj[prop];
