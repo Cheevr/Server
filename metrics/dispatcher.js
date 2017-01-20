@@ -4,7 +4,7 @@ config.addDefaultConfig(path.join(__dirname, '../config'));
 
 
 const async = require('async');
-const Database = require('../database');
+const Database = require('cheevr-database');
 const geoip = require('geoip-lite');
 const Logger = require('cheevr-logging');
 

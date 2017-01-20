@@ -10,7 +10,7 @@ const express = require('express');
 const Logger = require('cheevr-logging');
 const metrics = require('./metrics');
 const moment = require('moment');
-const Database = require('./database');
+const Database = require('cheevr-database');
 
 const app = express();
 const db = new Database();
@@ -27,6 +27,7 @@ require('./security')(app);
 require('./status')(app);
 require('./headers')(app);
 require('./auth')(app);
+require('./users')(app);
 require('./content')(app);
 
 // Server Startup
