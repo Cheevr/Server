@@ -14,7 +14,7 @@ const type = config.kibana.type;
 const bulkSize = 100;
 const interval = 1000;
 const buffer = [];
-const db = new Database(config.kibana, false);
+const db = Database.factory('kibana');
 
 exports.setGeoIP = metric => {
     if (!metric.request || !metric.request.ip) {
@@ -45,7 +45,7 @@ exports.poll = kill => {
             }, cb);
         }, err => {
             err && console.log('Unable to create index on Kibana', err);
-            db.client.bulk({
+            db.bulk({
                 body: bulkRequest
             }, err => err && console.log('Unable to send metrics to Kibana', err));
         });

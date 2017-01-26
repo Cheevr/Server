@@ -10,15 +10,18 @@ const express = require('express');
 const Logger = require('cheevr-logging');
 const metrics = require('./metrics');
 const moment = require('moment');
-const Database = require('cheevr-database');
+const db = require('cheevr-database');
 
 const app = express();
-const db = new Database();
 app.use(db.middleware());
-config.kibana.enabled && setInterval(
-    () => metrics.dispatch({cache: db.stats}),
-    moment.duration(...config.cache.stats.interval).asMilliseconds()
-);
+// TODO stats reporting needs to be done in metrics module for each database connection
+// if (config.kibana.enabled) {
+//     let kibana = db.factory('kibana');
+//     setInterval(
+//         () => metrics.dispatch({cache: kibana.stats}),
+//         moment.duration(...config.database.kibana.stats.interval).asMilliseconds()
+//     );
+// }
 
 require('./settings')(app);
 metrics(app);
