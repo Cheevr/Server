@@ -4,10 +4,12 @@ const config = require('cheevr-config');
 const express = require('express');
 const fs = require('fs');
 const lang = require('cheevr-lang');
+const Logger = require('cheevr-logging');
 const path = require('path');
 const Router = require('versioned-api-router');
 const stylus = require('stylus');
 const uglify = require('uglify-js');
+const util = require('util');
 
 
 const cwd = process.cwd();
@@ -49,7 +51,6 @@ module.exports = app => {
         });
     });
 
-
     // Serve static files
     let staticConfig = config.isProd ? { maxAge: config.backend.cacheTime } : {};
     fs.existsSync(cacheDir) && app.use('/css|/js', express.static(cacheDir, staticConfig));
@@ -57,21 +58,7 @@ module.exports = app => {
         fs.existsSync(dir) && app.use('/img', express.static(dir, staticConfig));
     }
 
-    let routePaths = Array.isArray() ? config.paths.routes : [ config.paths.routes ];
-    let router = new Router();
-    router.auth = app.auth;
-    for (let routePath of routePaths) {
-        let dir = path.isAbsolute(routePath) ? routePath : path.join(cwd, routePath);
-        if (fs.existsSync(dir)) {
-            let files = fs.readdirSync(dir);
-            for (let file of files) {
-                require(path.join(dir, file))(router);
-            }
-        }
-    }
-    app.use(router);
-
-    // Replace rendering function to look in mutlitple locations
+    // Replace rendering function to look in multitple locations
     app.use((req, res, next) => {
         let original = res.render;
         res.render = (file, dict = lang.dictionary) => {
@@ -97,6 +84,21 @@ module.exports = app => {
         next();
     });
 
+    // Include routes from the projects route directory
+    let routePaths = Array.isArray() ? config.paths.routes : [ config.paths.routes ];
+    let router = new Router();
+    router.auth = app.auth;
+    for (let routePath of routePaths) {
+        let dir = path.isAbsolute(routePath) ? routePath : path.join(cwd, routePath);
+        if (fs.existsSync(dir)) {
+            let files = fs.readdirSync(dir);
+            for (let file of files) {
+                require(path.join(dir, file))(router);
+            }
+        }
+    }
+    app.use(router);
+
     // Automatically serve view files if they exist.
     app.get('*', (req, res, next) => {
         let file = req.path.replace(/^\//, '').replace(/\.(pug|html?|php|asp|jsp|py|rb|xml)$/, '');
@@ -119,7 +121,7 @@ module.exports = app => {
 
     // Error handler
     app.use(function (error, req, res, next) {
-        console.error(error.stack);
+        Logger.server.error(util.format(error));
         res.status(500);
         let acceptType = req.headers['accept'];
         if (acceptType && acceptType.indexOf('html') !== 0) {

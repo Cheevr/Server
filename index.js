@@ -8,7 +8,6 @@ lang.addDirectory(path.join(__dirname, 'lang'));
 
 const express = require('express');
 const Logger = require('cheevr-logging');
-const metrics = require('./metrics');
 const moment = require('moment');
 const db = require('cheevr-database');
 
@@ -24,7 +23,7 @@ app.use(db.middleware());
 // }
 
 require('./settings')(app);
-metrics(app);
+require('./metrics')(app);
 app.use(Logger.middleware);
 require('./security')(app);
 require('./status')(app);
