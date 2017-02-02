@@ -1,3 +1,4 @@
+const database = require('cheevr-database');
 const rateLimit = require('express-rate-limit');
 
 
@@ -8,10 +9,10 @@ module.exports = app => {
     // Health check that will gracefully signal shutdown
     app.get('/health', rateLimit({windowMs: 2500}), (req, res) => {
         // TODO check readiness of all databases (probably needs to be done in database module)
-        if (!req.db.ready || shutdown) {
+        if (!database.ready || shutdown) {
             return res.status(503).end();
         }
-        req.es.ping(err => {
+        req.db.ping(err => {
             if (err) {
                 return res.status(503).end();
             }
