@@ -34,7 +34,7 @@ if (config.printConfig) {
     let copy = _.cloneDeep(config);
     delete copy._default;
     clean(copy);
-    Logger.server.info('Launch Configuration: ' + util.format(copy));
+    Logger.server.info('Launch Configuration: ' + util.inspect(copy, {showHidden: false, depth: null}));
 }
 
 module.exports = app => {
