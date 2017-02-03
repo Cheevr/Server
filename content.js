@@ -59,7 +59,7 @@ module.exports = app => {
     }
 
     // Replace rendering function to look in multitple locations
-    app.use((req, res, next) => {
+    app.get(/.*/, (req, res, next) => {
         let original = res.render;
         res.render = (file, dict = lang.dictionary) => {
             file = String(file);
@@ -113,7 +113,7 @@ module.exports = app => {
     app.use((req, res) => {
         res.status(404);
         let acceptType = req.headers['accept'] || '';
-        if (acceptType.indexOf('html') !== -1) {
+        if (req.method == 'GET' && acceptType.indexOf('html') !== -1) {
             return res.render(404);
         }
         res.end();
@@ -123,8 +123,8 @@ module.exports = app => {
     app.use(function (error, req, res, next) {
         Logger.server.error(util.format(error));
         res.status(500);
-        let acceptType = req.headers['accept'];
-        if (acceptType && acceptType.indexOf('html') !== 0) {
+        let acceptType = req.headers['accept'] || '';
+        if (req.method == 'GET' && acceptType.indexOf('html') !== 0) {
             return res.render(500);
         }
         res.end();

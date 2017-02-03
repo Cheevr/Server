@@ -6,7 +6,6 @@ config.addDefaultConfig(path.join(__dirname, '../config'));
 const async = require('async');
 const Database = require('cheevr-database');
 const geoip = require('geoip-lite');
-// TODO logger location is relative to this module, not the project cwd
 const Logger = require('cheevr-logging');
 
 process.title = config.kibana.process + ' tier:' + config.tier;
