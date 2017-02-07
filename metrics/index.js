@@ -1,5 +1,7 @@
 const childProces = require('child_process');
 const config = require('cheevr-config');
+const db = require('cheevr-database');
+const moment = require('moment');
 const path = require('path');
 const shortId = require('shortid');
 
@@ -9,6 +11,13 @@ shortId.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX
 const hostname = require('os').hostname();
 const application = path.basename(path.dirname(require.main.filename));
 
+/**
+ * A request handler that will record metrics and store them on the request object. The handler will update additional
+ * metrics once the response has returned.
+ * @param {ClientRequest} req
+ * @param {ServerResponse} res
+ * @param {function} next
+ */
 function setRequestMetrics(req, res, next) {
     let startTime = process.hrtime();
     req.id = req.get('id') || shortId.generate();
@@ -36,14 +45,11 @@ function setRequestMetrics(req, res, next) {
     next();
 }
 
-
 // Only start the dispatcher if kibana is enabled
 if (!config.kibana.enabled) {
     module.exports = app => app.use(setRequestMetrics);
-    module.exports.dispatch = () => {};
     return;
 }
-
 
 // Start a dispatched service that will take care of bulk importing metrics into kibana.
 const cwd = process.cwd();
@@ -56,10 +62,37 @@ const dispatcher = childProces.fork(
     }
 );
 const shutdownTimer = (process.env.NODE_SHUTDOWN_TIMER || 10) * 500;
+const kibana = db.factory('kibana');
 
 process.on('exit', () => {
     dispatcher.kill();
 });
+
+
+function sendDbStats(name, stats) {
+    if (!stats || !Object.keys(stats).length) {
+        return;
+    }
+    stats['@timestamp'] = new Date();
+    stats.databasename = name;
+    stats.process = process.pid;
+    stats.hostname = hostname;
+    stats.application = application;
+    stats.tier = config.tier;
+    console.log('sending stats for', name);
+    dispatcher.send(stats);
+}
+
+let dbs = db.list();
+for (let name in dbs) {
+    let instance = dbs[name];
+    if (instance.config.stats && instance.config.stats.interval) {
+        let interval = moment.duration(...instance.config.stats.interval).asMilliseconds();
+        setInterval(() => {
+            sendDbStats(name, instance.stats);
+        }, interval);
+    }
+}
 
 module.exports = app => {
     app.use(setRequestMetrics);
@@ -68,16 +101,4 @@ module.exports = app => {
         next();
     });
     app.on('shutdown', () => setTimeout(() => dispatcher.disconnect(), shutdownTimer));
-};
-
-module.exports.dispatch = metrics => {
-    if (!metrics || !Object.keys(metrics).length) {
-        return;
-    }
-    metrics['@timestamp'] = new Date();
-    metrics.process = process.pid;
-    metrics.hostname = hostname;
-    metrics.application = application;
-    metrics.tier = config.tier;
-    dispatcher.send(metrics);
 };

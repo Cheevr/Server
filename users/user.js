@@ -5,7 +5,7 @@ class User {
      */
     constructor(props) {
         for (let prop of ['id', 'email', 'token', 'firstname', 'lastname', 'fullname']) {
-            Object.defineProperty(this, prop, { get: () => this._load(prop) });
+            Object.defineProperty(this, prop, { get: () => this['_' + prop] });
         }
         for (let prop of props) {
             this['_' + prop] = props[prop];
@@ -16,9 +16,7 @@ class User {
      * Returns true or false depending on whether the user has the given permission.
      * @param name
      */
-    permission(name) {
-        // TODO
-    }
+    permission(name) {}
 
     /**
      * Loads the properties of the user from database.
@@ -28,7 +26,6 @@ class User {
         if (this['_' + prop]) {
             return this['_' + prop];
         }
-        // TODO async load from ES
     }
 }
 

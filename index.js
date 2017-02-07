@@ -8,24 +8,14 @@ lang.addDirectory(path.join(__dirname, 'lang'));
 
 const express = require('express');
 const Logger = require('cheevr-logging');
-const moment = require('moment');
 const db = require('cheevr-database');
 
 const app = express();
-app.use(db.middleware());
-// TODO stats reporting needs to be done in metrics module for each database connection
-// if (config.kibana.enabled) {
-//     let kibana = db.factory('kibana');
-//     setInterval(
-//         () => metrics.dispatch({cache: kibana.stats}),
-//         moment.duration(...config.database.kibana.stats.interval).asMilliseconds()
-//     );
-// }
-
 require('./settings')(app);
 require('./metrics')(app);
 app.use(Logger.middleware);
 require('./security')(app);
+app.use(db.middleware());
 require('./status')(app);
 require('./headers')(app);
 require('./auth')(app);

@@ -10,7 +10,7 @@ const Logger = require('cheevr-logging');
 
 process.title = config.kibana.process + ' tier:' + config.tier;
 const index = config.kibana.index;
-const type = config.kibana.type;
+const defaultType = config.kibana.type;
 const bulkSize = 100;
 const interval = 1000;
 const buffer = [];
@@ -39,7 +39,7 @@ exports.poll = kill => {
         async.each(metrics, (metric, cb) => {
             async.retry(3, cb => {
                 exports.setGeoIP(metric);
-                bulkRequest.push({index: {_index: index, _type: type}});
+                bulkRequest.push({index: {_index: index, _type: defaultType}});
                 bulkRequest.push(metric);
                 cb();
             }, cb);
