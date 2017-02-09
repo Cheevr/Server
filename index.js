@@ -1,12 +1,6 @@
-const path = require('path');
-const config = require('cheevr-config');
-// Set default server config
-config.addDefaultConfig(path.join(__dirname, 'config'));
-// Set default server translations
-const lang = require('cheevr-lang');
-lang.addDirectory(path.join(__dirname, 'lang'));
-
+const config = require('cheevr-config').addDefaultConfig(__dirname, 'config');
 const express = require('express');
+const lang = require('cheevr-lang').extend(__dirname, 'lang');
 const Logger = require('cheevr-logging');
 const db = require('cheevr-database');
 

@@ -1,12 +1,9 @@
-const path = require('path');
-const config = require('cheevr-config');
-config.addDefaultConfig(path.join(__dirname, '../config'));
-
-
+const config = require('cheevr-config').addDefaultConfig(__dirname, '../config');
 const async = require('async');
 const Database = require('cheevr-database');
 const geoip = require('geoip-lite');
 const Logger = require('cheevr-logging');
+
 
 process.title = config.kibana.process + ' tier:' + config.tier;
 const index = config.kibana.index;
