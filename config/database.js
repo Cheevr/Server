@@ -14,11 +14,11 @@ module.exports = {
                         dynamic_templates: [{
                             string_fields: {
                                 mapping: {
-                                    type: 'string',
+                                    type: 'text',
                                     analyzer: 'ngram_analyzer',
-                                    index: 'analyzed',
+                                    index: true,
                                     fields: {
-                                        raw: {type: 'string', index: 'not_analyzed', ignore_above: 256}
+                                        raw: {type: 'keyword', index: false, ignore_above: 256}
                                     }
                                 },
                                 match: '*',
@@ -78,18 +78,18 @@ module.exports = {
                         properties: {
                             '@timestamp': {type: 'date', format: 'strict_date_optional_time||epoch_millis'},
                             '@version': {type: 'string', index: 'not_analyzed'},
-                            screen: {type: 'string'},
-                            name: {type: 'string'},
-                            contact: {type: 'string'},
-                            message: {type: 'string'},
-                            agent: {type: 'string'},
-                            platform: {type: 'string'},
-                            href: {type: 'string'},
-                            language: {type: 'string'},
-                            tier: {type: 'string'},
-                            application: {type: 'string'},
-                            hostname: {type: 'string'},
-                            process: {type: 'integer'},
+                            screen: {type: 'keyword'},
+                            name: {type: 'keyword'},
+                            contact: {type: 'keyword'},
+                            message: {type: 'text'},
+                            agent: {type: 'keyword'},
+                            platform: {type: 'keyword'},
+                            href: {type: 'text'},
+                            language: {type: 'keyword'},
+                            tier: {type: 'keyword'},
+                            application: {type: 'keyword'},
+                            hostname: {type: 'keyword'},
+                            process: {type: 'keyword'},
                         }
                     }
                 },
@@ -160,14 +160,14 @@ module.exports = {
                             string_fields: {
                                 mapping: {
                                     fielddata: {format: 'disabled'},
-                                    index: 'analyzed',
+                                    index: true,
                                     omit_norms: true,
-                                    type: 'string',
+                                    type: 'text',
                                     fields: {
                                         raw: {
                                             ignore_above: 256,
-                                            index: 'not_analyzed',
-                                            type: 'string',
+                                            index: false,
+                                            type: 'keyword',
                                             doc_values: true
                                         }
                                     }
@@ -226,7 +226,7 @@ module.exports = {
                         }],
                         properties: {
                             '@timestamp': {type: 'date', format: 'strict_date_optional_time||epoch_millis'},
-                            '@version': {type: 'string', index: 'not_analyzed'},
+                            '@version': {type: 'keyword', index: false},
                             geoip: {
                                 properties: {
                                     latitude: {type: 'float'},
