@@ -111,7 +111,7 @@ module.exports = {
                         }
                     },
                     index: {
-                        number_of_shards: 8,
+                        number_of_shards: 4,
                         search: {
                             slowlog: {
                                 threshold: {
@@ -255,7 +255,7 @@ module.exports = {
                         }
                     },
                     index: {
-                        number_of_shards: 8,
+                        number_of_shards: 4,
                         search: {
                             slowlog: {
                                 threshold: {
