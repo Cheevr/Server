@@ -79,6 +79,7 @@ function sendDbStats(name, stats) {
     stats.hostname = hostname;
     stats.application = application;
     stats.tier = config.tier;
+    // TODO use Logging system
     console.log('sending stats for', name);
     dispatcher.send(stats);
 }

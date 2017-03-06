@@ -13,6 +13,7 @@ const interval = 1000;
 const buffer = [];
 const db = Database.factory('kibana');
 
+// TODO look for ip fields anywhere in the object
 exports.setGeoIP = metric => {
     if (!metric.request || !metric.request.ip) {
         return;
@@ -41,10 +42,10 @@ exports.poll = kill => {
                 cb();
             }, cb);
         }, err => {
-            err && console.log('Unable to create index on Kibana', err);
+            err && Logger.server.error('Unable to create index on Kibana', err);
             db.bulk({
                 body: bulkRequest
-            }, err => err && console.log('Unable to send metrics to Kibana', err));
+            }, err => err && Logger.server.error('Unable to send metrics to Kibana', err));
         });
     }
     if (kill) {

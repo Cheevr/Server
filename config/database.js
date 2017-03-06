@@ -160,14 +160,14 @@ module.exports = {
                             string_fields: {
                                 mapping: {
                                     fielddata: {format: 'disabled'},
-                                    index: true,
-                                    omit_norms: true,
-                                    type: 'text',
+                                    index: 'analyzed',
+                                    analyzer: 'ngram_analyzer',
+                                    type: 'string',
                                     fields: {
                                         raw: {
                                             ignore_above: 256,
-                                            index: false,
-                                            type: 'keyword',
+                                            index: 'not_analyzed',
+                                            type: 'string',
                                             doc_values: true
                                         }
                                     }
@@ -226,12 +226,60 @@ module.exports = {
                         }],
                         properties: {
                             '@timestamp': {type: 'date', format: 'strict_date_optional_time||epoch_millis'},
-                            '@version': {type: 'keyword', index: false},
+                            '@version': {type: 'string', index: 'not_analyzed'},
                             geoip: {
                                 properties: {
                                     latitude: {type: 'float'},
                                     location: {type: 'geo_point'},
                                     longitude: {type: 'float'}
+                                }
+                            }
+                        }
+                    }
+                },
+                settings: {
+                    analysis: {
+                        filter: {
+                            ngram_filter: {
+                                type: 'nGram',
+                                min_gram: 2,
+                                max_gram: 50
+                            }
+                        },
+                        analyzer: {
+                            ngram_analyzer: {
+                                type: 'custom',
+                                tokenizer: 'standard',
+                                filter: ['lowercase', 'ngram_filter']
+                            }
+                        }
+                    },
+                    index: {
+                        number_of_shards: 8,
+                        search: {
+                            slowlog: {
+                                threshold: {
+                                    query: {
+                                        warn: '10s',
+                                        info: '5s',
+                                        debug: '2s'
+                                    },
+                                    fetch: {
+                                        warn: '1s',
+                                        info: '800ms',
+                                        debug: '500ms'
+                                    }
+                                }
+                            }
+                        },
+                        indexing: {
+                            slowlog: {
+                                threshold: {
+                                    index: {
+                                        warn: '10s',
+                                        info: '5s',
+                                        debug: '2s'
+                                    }
                                 }
                             }
                         }
