@@ -39,6 +39,7 @@
     "express": "^4",
     "express-rate-limit": "^2",
     "express-token-api-middleware": "^0.6",
+    "fork-require": "^1",
     "geoip-lite": "^1",
     "helmet": "^3",
     "lodash": "^4",

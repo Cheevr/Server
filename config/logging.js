@@ -1,6 +1,7 @@
 module.exports = {
     loggers: {
         server: 'debug',
-        elasticsearch: 'info'
+        elasticsearch: 'info',
+        tasks: 'info'
     }
 };

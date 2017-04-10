@@ -7,6 +7,7 @@ const util = require('util');
 
 
 const cwd = process.cwd();
+const application = path.basename(path.dirname(require.main.filename));
 const viewDir = config.normalizePath(cwd, config.paths.views);
 viewDir.push(path.join(__dirname, 'static/views'));
 
@@ -50,5 +51,5 @@ module.exports = app => {
     app.set('views', views);
 
     // Set the process name to something friendly
-    process.title = 'cheevr-' + path.basename(cwd) + ' tier:' + config.tier + ' port:' + config.backend.port;
+    process.title = application + ' tier:' + config.tier + ' port:' + config.backend.port;
 };
