@@ -5,13 +5,29 @@ const geoip = require('geoip-lite');
 const Logger = require('cheevr-logging');
 
 
-process.title = config.kibana.process + ' tier:' + config.tier;
 const index = config.kibana.index;
 const defaultType = config.kibana.type;
 const bulkSize = 100;
-const interval = 1000;
 const buffer = [];
 const db = Database.factory('kibana');
+
+module.exports = exports = Runner => {
+    Runner.job({
+        name: 'Metrics Exporter',
+        interval: '10s',
+    }, context => {
+        // TODO get database from context
+        exports.poll(context.resolve);
+    });
+};
+
+/**
+ * Receiver method from parent tasks
+ * @param metrics
+ */
+exports.sendMetrics = metrics => {
+    buffer.push(metrics);
+};
 
 // TODO look for ip fields anywhere in the object
 exports.setGeoIP = metric => {
@@ -30,7 +46,11 @@ exports.setGeoIP = metric => {
     }
 };
 
-exports.poll = kill => {
+/**
+ * Fetches any buffered metrics and sends them to Kibana in a bulk request.
+ */
+exports.poll = cb => {
+    // TODO bulk requests will not wait for previous ones to complete
     while (buffer.length) {
         let metrics = buffer.splice(0, bulkSize);
         let bulkRequest = [];
@@ -48,18 +68,7 @@ exports.poll = kill => {
             }, err => err && Logger.server.error('Unable to send metrics to Kibana', err));
         });
     }
-    if (kill) {
-        clearInterval(timeout);
-        process.exit();
-    }
+    cb && cb();
 };
 
-process.on('message', message => buffer.push(message));
-process.on('SIGTERM', exports.poll.bind(null, true));
-
-// Watch parent exit when it dies
-process.stdout.resume();
-process.stdout.on('end', () => process.exit());
-
-let timeout = setInterval(exports.poll, interval);
-Logger.server.info('Dispatcher is running with tier', config.tier);
+process.on('SIGTERM', () => exports.poll());

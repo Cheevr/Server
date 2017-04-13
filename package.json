@@ -1,6 +1,6 @@
 {
   "name": "cheevr-server",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "An express server set up to server both html pages and json rest responses",
   "private": true,
   "main": "index.js",
@@ -42,6 +42,7 @@
     "fork-require": "^1",
     "geoip-lite": "^1",
     "helmet": "^3",
+    "later": "^1",
     "lodash": "^4",
     "moment": "^2",
     "pug": "^2.0.0-beta6",

@@ -1,4 +1,3 @@
-const childProces = require('child_process');
 const config = require('cheevr-config');
 const db = require('cheevr-database');
 const moment = require('moment');
@@ -45,61 +44,39 @@ function setRequestMetrics(req, res, next) {
     next();
 }
 
-// Only start the dispatcher if kibana is enabled
-if (!config.kibana.enabled) {
-    module.exports = app => app.use(setRequestMetrics);
-    return;
-}
-
-// Start a dispatched service that will take care of bulk importing metrics into kibana.
-const cwd = process.cwd();
-const dispatcher = childProces.fork(
-    path.join(__dirname, './dispatcher.js'),
-    process.argv.splice(2), {
-        cwd,
-        env: process.env,
-        execArgv: ['--max_old_space_size=' + config.kibana.memory]
-    }
-);
-const shutdownTimer = (process.env.NODE_SHUTDOWN_TIMER || 10) * 500;
-const kibana = db.factory('kibana');
-
-process.on('exit', () => {
-    dispatcher.kill();
-});
-
-
-function sendDbStats(name, stats) {
-    if (!stats || !Object.keys(stats).length) {
-        return;
-    }
-    stats['@timestamp'] = new Date();
-    stats.databasename = name;
-    stats.process = process.pid;
-    stats.hostname = hostname;
-    stats.application = application;
-    stats.tier = config.tier;
-    // TODO use Logging system
-    console.log('sending stats for', name);
-    dispatcher.send(stats);
-}
-
-let dbs = db.list();
-for (let name in dbs) {
-    let instance = dbs[name];
-    if (instance.config.stats && instance.config.stats.interval) {
-        let interval = moment.duration(...instance.config.stats.interval).asMilliseconds();
-        setInterval(() => {
-            sendDbStats(name, instance.stats);
-        }, interval);
-    }
-}
-
-module.exports = app => {
+module.exports = async (app, tasks) => {
     app.use(setRequestMetrics);
-    app.use((req, res, next) => {
-        res.on('finish', () => dispatcher.send(req.metrics));
-        next();
-    });
-    app.on('shutdown', () => setTimeout(() => dispatcher.disconnect(), shutdownTimer));
+
+    if (config.kibana.enabled) {
+
+        // Request metrics
+        let task;
+        app.use((req, res, next) => {
+            res.on('finish', () => task && task.roundRobin.sendMetrics(req.metrics));
+            next();
+        });
+        task = await tasks.addTask(path.join(__dirname, 'dispatcher'));
+
+        // DB stats polling to metrics
+        let dbs = db.list();
+        for (let name in dbs) {
+            let instance = dbs[name];
+            if (instance.config.stats && instance.config.stats.interval) {
+                let interval = moment.duration(...instance.config.stats.interval).asMilliseconds();
+                setInterval(() => {
+                    let stats = instance.stats;
+                    if (!stats || !Object.keys(stats).length) {
+                        return;
+                    }
+                    stats['@timestamp'] = new Date();
+                    stats.databasename = name;
+                    stats.process = process.pid;
+                    stats.hostname = hostname;
+                    stats.application = application;
+                    stats.tier = config.tier;
+                    task.roundRobin.send(stats);
+                }, interval);
+            }
+        }
+    }
 };

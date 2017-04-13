@@ -1,11 +1,12 @@
 const _ = require('lodash');
 const config = require('cheevr-config').addDefaultConfig(__dirname, '../config');
+const later = require('later');
 const Logger = require('cheevr-logging');
 const moment = require('moment');
 const path = require('path');
 
 
-const log = Logger.tasks;
+const log = Logger[config.tasks.logger];
 const momentRegexp = /(\d+)(.*)/;
 const appTitle = process.argv[2];
 const workerId = process.argv[3];
@@ -13,19 +14,52 @@ const taskFile = process.argv[4];
 const taskName = path.basename(taskFile, path.extname(taskFile));
 const task = require(taskFile);
 
+function send(message, retries = 0) {
+    try {
+        process.send(message);
+    } catch (err) {
+        if (retries < 3) {
+            return setImmediate(() => send(message, ++retries));
+        }
+    }
+}
+
 class Runner {
     constructor() {
         this._jobs = {};
         this._cluster = new Proxy({}, {
-            get: (_, method) => (...args) => process.send({ method, args })
+            get: (_, method) => (...args) => send({ method, args })
         });
         task(this);
     }
 
-    set workers(count) {
-        this._cluster.setWorkers(taskName, count);
+    /**
+     * An alias for {@link Runner#workers}.
+     * @param {number} count
+     * @see Runner#workers
+     */
+    set worker(count) {
+        this.workers = count;
     }
 
+    /**
+     * Allows the job configurator to set how many workers should be running a task.
+     * @param {number} count    The number of workers that should be running.
+     */
+    set workers(count) {
+        this._cluster.setWorkers(count);
+    }
+
+    enable(enabled) {
+        // TODO enable or disable this task
+        console.log('setting worker/runner to be', enabled ? 'enabled' : 'disabled');
+    }
+
+    /**
+     * Allows a developer to register a new job in a task file.
+     * @param {object} jobConfig    The job configuration
+     * @param {function} executor   The actual job to run
+     */
     job(jobConfig, executor) {
         if (!jobConfig.name) {
             throw new Error('Please give your job a unique name');
@@ -33,7 +67,9 @@ class Runner {
         if (this._jobs[jobConfig.name]) {
             throw new Error('A job with the given name [' + jobConfig.name + '] has already been configured')
         }
-        this._cluster.config(_.defaultsDeep(jobConfig, config.defaults.tasks));
+
+        _.defaultsDeep(jobConfig, config.defaults.tasks);
+
         if (jobConfig.interval) {
             jobConfig.interval = Runner._toInterval(jobConfig.interval);
         }
@@ -41,7 +77,7 @@ class Runner {
             jobConfig.sleep = Runner._toInterval(jobConfig.sleep);
         }
         if (jobConfig.cron) {
-            // TODO handle cron format
+            jobConfig.cron = later.parse.test(jobConfig.cron);
         }
 
         let id = jobConfig.name;
@@ -97,15 +133,18 @@ class Runner {
                 job.lastRun = Date.now();
             }
             this._setState(id, 'running');
+            let now = moment();
             new Promise((resolve, reject) => {
                 // TODO add database, metrics & mq to context
+                log.debug('Job "%s" in task "%s" has started', id, taskName);
                 job.executor({resolve, reject});
             }).then(() => {
                 if (job.config.waitForComplete) {
                     job.lastRun = Date.now();
                 }
                 let timeToNextRun = this._timeToNextRun(id);
-                log.info('Job finished, next run in', moment.duration(timeToNextRun).humanize());
+                let end = moment.duration(moment().diff(now));
+                log.debug('Job "%s" in task "%s" finished within %s, next run in', id, taskName, end.humanize(), moment.duration(timeToNextRun).humanize());
                 this._setState(id, 'idle');
                 setTimeout(this._runJob.bind(this, id), timeToNextRun);
             }).catch(err => {

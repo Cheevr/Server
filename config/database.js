@@ -10,70 +10,6 @@ module.exports = {
                     retain: [ 30, 'd' ]
                 },
                 mappings: {
-                    _default_: {
-                        dynamic_templates: [{
-                            string_fields: {
-                                mapping: {
-                                    type: 'text',
-                                    analyzer: 'ngram_analyzer',
-                                    index: true,
-                                    fields: {
-                                        raw: {type: 'keyword', index: false, ignore_above: 256}
-                                    }
-                                },
-                                match: '*',
-                                match_mapping_type: 'string'
-                            }
-                        }, {
-                            float_fields: {
-                                mapping: {type: 'float', doc_values: true},
-                                match: '*',
-                                match_mapping_type: 'float'
-                            }
-                        }, {
-                            double_fields: {
-                                mapping: {type: 'double', doc_values: true},
-                                match: '*',
-                                match_mapping_type: 'double'
-                            }
-                        }, {
-                            byte_fields: {
-                                mapping: {type: 'byte', doc_values: true},
-                                match: '*',
-                                match_mapping_type: 'byte'
-                            }
-                        }, {
-                            short_fields: {
-                                mapping: {type: 'short', doc_values: true},
-                                match: '*',
-                                match_mapping_type: 'short'
-                            }
-                        }, {
-                            integer_fields: {
-                                mapping: {type: 'integer', doc_values: true},
-                                match: '*',
-                                match_mapping_type: 'integer'
-                            }
-                        }, {
-                            long_fields: {
-                                mapping: {type: 'long', doc_values: true},
-                                match: '*',
-                                match_mapping_type: 'long'
-                            }
-                        }, {
-                            date_fields: {
-                                mapping: {type: 'date', doc_values: true},
-                                match: '*',
-                                match_mapping_type: 'date'
-                            }
-                        }, {
-                            geo_point_fields: {
-                                mapping: {type: 'geo_point', doc_values: true},
-                                match: '*',
-                                match_mapping_type: 'geo_point'
-                            }
-                        }]
-                    },
                     entry: {
                         properties: {
                             '@timestamp': {type: 'date', format: 'strict_date_optional_time||epoch_millis'},
@@ -81,7 +17,7 @@ module.exports = {
                             screen: {type: 'keyword'},
                             name: {type: 'keyword'},
                             contact: {type: 'keyword'},
-                            message: {type: 'text'},
+                            message: {type: 'text', analyzer: 'ngram_analyzer'},
                             agent: {type: 'keyword'},
                             platform: {type: 'keyword'},
                             href: {type: 'text'},
@@ -90,6 +26,74 @@ module.exports = {
                             application: {type: 'keyword'},
                             hostname: {type: 'keyword'},
                             process: {type: 'keyword'},
+                        }
+                    }
+                },
+                settings: {
+                    analysis: {
+                        filter: {
+                            ngram_filter: {
+                                type: 'nGram',
+                                min_gram: 2,
+                                max_gram: 50
+                            }
+                        },
+                        analyzer: {
+                            ngram_analyzer: {
+                                type: 'custom',
+                                tokenizer: 'standard',
+                                filter: ['lowercase', 'ngram_filter']
+                            }
+                        }
+                    },
+                    index: {
+                        number_of_shards: 4,
+                        search: {
+                            slowlog: {
+                                threshold: {
+                                    query: {
+                                        warn: '10s',
+                                        info: '5s',
+                                        debug: '2s'
+                                    },
+                                    fetch: {
+                                        warn: '1s',
+                                        info: '800ms',
+                                        debug: '500ms'
+                                    }
+                                }
+                            }
+                        },
+                        indexing: {
+                            slowlog: {
+                                threshold: {
+                                    index: {
+                                        warn: '10s',
+                                        info: '5s',
+                                        debug: '2s'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    tasks: {
+        logger: 'tasks',
+        client: {
+            host:'localhost:9200',
+        },
+        indices: {
+            tasks: {
+                mappings: {
+                    task: {
+                        properties: {
+                            host: {type: 'keyword'},
+                            file: {type: 'text', analyzer: 'ngram_analyzer'},
+                            workers: {type: 'short'},
+                            enabled: {type: 'boolean'}
                         }
                     }
                 },

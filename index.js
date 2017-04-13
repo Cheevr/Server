@@ -4,13 +4,13 @@ const lang = require('cheevr-lang').extend(__dirname, 'lang');
 const Logger = require('cheevr-logging');
 const db = require('cheevr-database');
 const path = require('path');
-const tasks = require('./tasks');
+const Tasks = require('./tasks');
 
 
 const app = express();
 
 require('./settings')(app);
-require('./metrics')(app);
+require('./metrics')(app, Tasks);
 app.use(Logger.middleware);
 require('./security')(app);
 app.use(db.middleware());
