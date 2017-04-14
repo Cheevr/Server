@@ -18,6 +18,21 @@ class Worker {
         });
     }
 
+    setState(jobId, state) {
+        let job = this.state[jobId] = this.state[jobId] || {};
+        if (job.state === 'running' && state !== 'running') {
+            job.finished = Date.now();
+        }
+        if (job.state !== 'running' && state === 'running') {
+            job.started = Date.now();
+        }
+        job.state = state;
+    }
+
+    get enabled() {
+        return this._enabled;
+    }
+
     set enabled(enabled) {
         if (this._enabled !== enabled) {
             this._runner.enable(enabled);

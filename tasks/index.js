@@ -29,6 +29,9 @@ class TaskManager {
      * @param {string|string[]} taskPath    The file or directory to create a task off of
      */
     scanPath(taskPath) {
+        if (!config.tasks.enabled) {
+            return;
+        }
         taskPath = Array.isArray(taskPath) ? taskPath : [ taskPath ];
         for (let dir of taskPath) {
             if (fs.existsSync(dir)) {
@@ -51,6 +54,9 @@ class TaskManager {
      * @returns {Task} A task object that allows to send messages to one or more workers
      */
     async addTask(file) {
+        if (!config.tasks.enabled) {
+            return;
+        }
         file = path.normalize(file);
         let taskName = path.basename(file, path.extname(file));
         let task = this._tasks[file];
@@ -68,7 +74,7 @@ class TaskManager {
         }
 
         let worker = new Worker(task, file);
-        worker.on('message', payload => {
+        worker._runner._childProcess.on('message', payload => {
             if (this[payload.method]) {
                 payload.args = Array.isArray(payload.args) ? payload.args : [ payload.args ];
                 this[payload.method].call(this, worker, ...payload.args);
@@ -107,6 +113,62 @@ class TaskManager {
         worker.kill();
         delete this.workers[worker.id];
         this._tasks[task.file].workers.filter(entry => entry !== worker);
+    }
+
+    /**
+     * Sets up a status api for tasks
+     * @param app
+     * @param urlPath
+     */
+    endpoint(app, urlPath = config.tasks.urlPath) {
+        if (config.tasks.enabled) {
+            app.get(urlPath + '/status', (req, res) => {
+                let response = {};
+                for (let file in this._tasks) {
+                    let task = this._tasks[file];
+                    let workers = {};
+                    for (let worker of task.workers) {
+                        // TODO state is not set
+                        workers[worker.id] = worker.state;
+                    }
+                    response[task.name] = {
+                        workers,
+                        enabled: task.enabled
+                    }
+                }
+                res.jsonp(response).end();
+            });
+            app.get(urlPath + '/enable/:taskName', (req, res, next) => {
+                for (let file in this._tasks) {
+                    if (file.endsWith(req.params.taskName)) {
+                        this._tasks[file].enabled = true;
+                        log.info('Set task "%s" to be enabled', req.params.taskName);
+                        return res.status(204).end();
+                    }
+                }
+                next();
+            });
+            app.get(urlPath + '/disable/:taskName', (req, res, next) => {
+                for (let file in this._tasks) {
+                    if (file.endsWith(req.params.taskName)) {
+                        log.info('Set task "%s" to be disabled', req.params.taskName);
+                        this._tasks[file].enabled = false;
+                        return res.status(204).end();
+                    }
+                }
+                next();
+            });
+            app.get(urlPath + '/trigger/:taskName/:jobName', (req, res, next) => {
+                for (let file in this._tasks) {
+                    if (file.endsWith(req.params.taskName)) {
+                        this._tasks[file].roundRobin._runJob(req.params.jobName);
+                        log.info('Manually triggered job "%s" in task "%s"', req.params.jobName, req.params.taskName);
+                        return res.status(204).end();
+                    }
+                }
+                next();
+            });
+        }
     }
 
     /**
@@ -150,13 +212,12 @@ class TaskManager {
     /**
      * Sets the state of any worker.
      * @param {Worker} worker   The worker object
-     * @param {string} job      The job id
+     * @param {string} jobId      The job id
      * @param {string} state    The state the worker is currently in
      */
-    state(worker, job, state) {
+    state(worker, jobId, state) {
         // Reminder: states are only kept in memory
-        // TODO states need to be per job
-        worker.state[job] = state;
+        worker.setState(jobId, state);
     }
 
     /**

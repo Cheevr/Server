@@ -18,9 +18,7 @@ function send(message, retries = 0) {
     try {
         process.send(message);
     } catch (err) {
-        if (retries < 3) {
-            return setImmediate(() => send(message, ++retries));
-        }
+        retries < 3 && setImmediate(() => send(message, ++retries));
     }
 }
 
@@ -50,6 +48,10 @@ class Runner {
         this._cluster.setWorkers(count);
     }
 
+    /**
+     * Enabled or disables this runners jobs.
+     * @param enabled
+     */
     enable(enabled) {
         // TODO enable or disable this task
         console.log('setting worker/runner to be', enabled ? 'enabled' : 'disabled');
@@ -82,8 +84,8 @@ class Runner {
 
         let id = jobConfig.name;
         this._jobs[id] = {config: jobConfig, executor};
+        this._jobs[id].timeout = setTimeout(this._runJob.bind(this, id), this._timeToNextRun(id));
         this._setState(id, 'idle');
-        setTimeout(this._runJob.bind(this, id), this._timeToNextRun(id));
     }
 
     /**
@@ -123,6 +125,7 @@ class Runner {
 
     _runJob(id) {
         let job = this._jobs[id];
+        clearTimeout(job.timeout);
 
         if (job.config.interval) {
             // if a job is running it will trigger a new run once it's done on intervals or just skip it if it's
@@ -146,7 +149,7 @@ class Runner {
                 let end = moment.duration(moment().diff(now));
                 log.debug('Job "%s" in task "%s" finished within %s, next run in', id, taskName, end.humanize(), moment.duration(timeToNextRun).humanize());
                 this._setState(id, 'idle');
-                setTimeout(this._runJob.bind(this, id), timeToNextRun);
+                job.timeout = setTimeout(this._runJob.bind(this, id), timeToNextRun);
             }).catch(err => {
                 log.error('Error running job', err.stack || err.toString());
                 // TODO retry logic && timeouts
@@ -164,7 +167,7 @@ class Runner {
 
     _setState(id, state) {
         this._jobs[id].state = state;
-        this._cluster.state(id, 'running');
+        this._cluster.state(id, state);
     }
 }
 
