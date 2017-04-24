@@ -1,8 +1,18 @@
+const config = require('cheevr-config');
 const fork = require('fork-require');
 const shortId = require('shortid');
 
 
+/**
+ * The worker class wraps communication with the runner process that will run a task in a separate node instance.
+ * All method calls on this object are proxied if they don't exist already and sent to the runner process transparently.
+ */
 class Worker {
+    /**
+     * @param  task
+     * @param file
+     * @returns {Proxy}
+     */
     constructor(task, file) {
         this._id = shortId.generate();
         this._task = task;
@@ -11,7 +21,10 @@ class Worker {
         this.state = {};
 
         // TODO allow to set execArgv (for e.g. memory setting) for forked processes
-        this._runner = fork('./runner.js', { args: [process.title, this._id, file].concat(process.argv) });
+        this._runner = fork('./runner.js', {
+            args: [process.title, this._id, file].concat(process.argv),
+            execArgv: [ '--max_old_space_size=' + config.tasks.memory ]
+        });
 
         return new Proxy(this, {
             get: (obj, method) => obj[method] ? obj[method] : obj._runner[method]

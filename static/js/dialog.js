@@ -82,7 +82,7 @@ exports.show = opts => {
         if (!opts[handler]) {
             return button.remove();
         }
-        autoclose = opts.timeout || 0;
+        autoclose = opts._timeout || 0;
         if (typeof opts[handler] == 'function') {
             button.on('click', function(event) {
                 if (opts.input) {

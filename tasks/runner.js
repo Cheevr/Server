@@ -1,10 +1,11 @@
 const config = require('cheevr-config').addDefaultConfig(__dirname, '../config');
-const CronJob = require('./job.cron');
-const IntervalJob = require('./job.interval');
 const later = require('later');
 const Logger = require('cheevr-logging');
 const moment = require('moment');
 const path = require('path');
+const CronJob = require('./job.cron');
+const IntervalJob = require('./job.interval');
+const OnceJob = require('./job.once');
 
 
 const log = Logger[config.tasks.logger];
@@ -14,6 +15,11 @@ const taskFile = process.argv[4];
 const taskName = path.basename(taskFile, path.extname(taskFile));
 const task = require(taskFile);
 
+/**
+ * Will try to send a message up to 3 times to the parent process if it fails.
+ * @param {*} message           The message you want to send.
+ * @param {number} [retries=0]  The parameter to keep track how often we tried to send to the parent.
+ */
 function send(message, retries = 0) {
     try {
         process.send(message);
@@ -55,7 +61,7 @@ class Runner {
 
     /**
      * Enabled or disables this runners jobs.
-     * @param enabled
+     * @param {boolean} enabled
      */
     set enable(enabled) {
         if (!this._enabled && enabled) {
@@ -71,18 +77,18 @@ class Runner {
 
     /**
      * Allows a developer to register a new job in a task file.
-     * @param {object} jobConfig    The job configuration
-     * @param {function} executor   The actual job to run
+     * @param {JobConfig} jobConfig     The job configuration
+     * @param {JobExecutor} executor    The actual job to run
      */
     job(jobConfig, executor) {
-        if (!jobConfig.name) {
-            throw new Error('Please give your job a unique name');
-        }
+        jobConfig.name = jobConfig.name || executor.name;
         if (this._jobs[jobConfig.name]) {
             throw new Error('A job with the given name [' + jobConfig.name + '] has already been configured')
         }
         let job;
-        if (jobConfig.interval) {
+        if (jobConfig.once) {
+            job = new OnceJob(jobConfig, executor);
+        } else if (jobConfig.interval) {
             job = new IntervalJob(jobConfig, executor);
         } else if (jobConfig.cron) {
             job = new CronJob(jobConfig, executor)
@@ -90,7 +96,7 @@ class Runner {
             throw new Error('The job is missing a valid timing configuration');
         }
         this._jobs[job.id] = job;
-        return this;
+        return job;
     }
 }
 
@@ -106,6 +112,6 @@ module.exports = exports = new Proxy(new Runner(), {
 });
 
 process.title = appTitle + ' task:' + taskName + ' id:' + workerId;
-Logger.tasks.info('Task "%s" (worker:%s) is running with tier', taskName, workerId, config.tier);
+log.info('Task "%s" (worker:%s) is running with tier', taskName, workerId, config.tier);
 
 process.on('unhandledRejection', err => console.log(err.stack));

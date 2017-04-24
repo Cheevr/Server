@@ -15,7 +15,7 @@ app.use(Logger.middleware);
 require('./security')(app);
 app.use(db.middleware());
 require('./status')(app);
-Tasks.endpoint(app);
+require('./tasks').endpoint(app);
 require('./headers')(app);
 require('./auth')(app);
 require('./users')(app);

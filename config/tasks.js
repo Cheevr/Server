@@ -3,5 +3,6 @@ module.exports = {
     database: 'tasks',
     index: 'tasks',
     logger: 'tasks',
-    urlPath: '/tasks'
+    urlPath: '/tasks',
+    memory: '256'
 };

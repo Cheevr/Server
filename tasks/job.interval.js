@@ -1,45 +1,33 @@
-const config = require('cheevr-config');
-const Context = require('./context');
 const Job = require('./job');
 const moment = require('moment');
-const Logger = require('cheevr-logging');
-const path = require('path');
 
 
-const log = Logger[config.tasks.logger];
+/**
+ * @typedef {object} IntervalJobConfig
+ * @extends {JobConfig}
+ * @property {boolean} [waitForComplete=true]   For interval jobs whether to wait for finish before calculating next run
+ * @property {string|number} interval           Either a number that represents ms or a string that is readable by moment.js
+ */
+
+
 const momentRegexp = /(\d+)(.*)/;
-const taskFile = process.argv[4];
-const taskName = path.basename(taskFile, path.extname(taskFile));
 
 class IntervalJob extends Job {
+    /**
+     * @param {IntervalJobConfig} jobConfig
+     * @param {JobExecutor} executor
+     */
     constructor(jobConfig, executor) {
         super(jobConfig, executor);
         jobConfig.interval = IntervalJob._toInterval(jobConfig.interval);
     }
 
-
     run() {
-        super.run();
-        if (this._state === 'running' && !this._config.allowOverlaps) {
-            return;
-        }
-        if (!this._config.waitForComplete) {
-            this._lastRun = moment();
-        }
-        this.state = 'running';
-        let context = new Context(taskName);
-        context.execute(this).then(() => {
+        super.run().then(context => {
             if (this._config.waitForComplete) {
                 this._lastRun = context.ended;
             }
-            let timeToNextRun = this.nextRun;
-            log.debug('Job "%s" in task "%s" finished within %s, next run in', this.id, taskName, context.elapsed.humanize(), moment.duration(timeToNextRun).humanize());
-            this.state = 'idle';
-            this.timeout = setTimeout(this.run.bind(this), timeToNextRun);
-        }).catch(err => {
-            // TODO retry logic && timeouts
-            log.error('Error running job', err.stack || err.toString());
-            this.state = 'error';
+            setTimeout(this.run.bind(this), this.nextRun);
         });
     }
 
@@ -49,7 +37,10 @@ class IntervalJob extends Job {
      * @private
      */
     get nextRun() {
-        return Math.max(this._lastRun.valueOf() - Date.now() + this._config.interval, this._config.sleep);
+        if (!this._lastRun) {
+            return this._config.sleep;
+        }
+        return Math.max(this._lastRun.valueOf() + this._config.interval - Date.now(), super.nextRun);
     }
 
     /**

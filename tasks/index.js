@@ -1,6 +1,5 @@
 const config = require('cheevr-config');
 const Database = require('cheevr-database');
-const fork = require('fork-require');
 const fs = require('fs');
 const Logger = require('cheevr-logging');
 const path = require('path');
