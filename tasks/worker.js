@@ -9,20 +9,18 @@ const shortId = require('shortid');
  */
 class Worker {
     /**
-     * @param  task
-     * @param file
+     * @param {Task} task
      * @returns {Proxy}
      */
-    constructor(task, file) {
+    constructor(task) {
         this._id = shortId.generate();
         this._task = task;
-        this._file = file;
         this._enabled = true;
         this.state = {};
 
         // TODO allow to set execArgv (for e.g. memory setting) for forked processes
         this._runner = fork('./runner.js', {
-            args: [process.title, this._id, file].concat(process.argv),
+            args: [process.title, this._id, task.file].concat(process.argv),
             execArgv: [ '--max_old_space_size=' + config.tasks.memory ]
         });
 
@@ -35,6 +33,7 @@ class Worker {
         let job = this.state[jobId] = this.state[jobId] || {};
         if (job.state === 'running' && state !== 'running') {
             job.finished = Date.now();
+            job.duration = job.finished - job.started;
         }
         if (job.state !== 'running' && state === 'running') {
             job.started = Date.now();
@@ -47,6 +46,7 @@ class Worker {
     }
 
     set enabled(enabled) {
+        console.log('setting to', enabled)
         if (this._enabled !== enabled) {
             this._runner.enable(enabled);
         }
@@ -58,7 +58,7 @@ class Worker {
     }
 
     get file() {
-        return this._file;
+        return this.task.file;
     }
 
     get task() {
@@ -66,7 +66,8 @@ class Worker {
     }
 
     kill() {
-        this._runner._childProcess.kill();
+        // TODO see if SEGTERM cna be sed instead to allow for graceful shutdown. Maybe by sending a kill signal to the child and let it shut down itself
+        this._runner._childProcess.kill('SIGHUP');
     }
 }
 

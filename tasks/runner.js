@@ -60,22 +60,6 @@ class Runner {
     }
 
     /**
-     * Enabled or disables this runners jobs.
-     * @param {boolean} enabled
-     */
-    set enable(enabled) {
-        if (!this._enabled && enabled) {
-            // TODO go through each job and set a new timeout
-            console.log('setting worker/runner to be enabled');
-        }
-        if (this._enabled && !enabled) {
-            // TODO go through each job and clear the timeout
-            console.log('setting worker/runner to be disabled');
-        }
-        this._enabled = enabled;
-    }
-
-    /**
      * Allows a developer to register a new job in a task file.
      * @param {JobConfig} jobConfig     The job configuration
      * @param {JobExecutor} executor    The actual job to run
@@ -114,4 +98,4 @@ module.exports = exports = new Proxy(new Runner(), {
 process.title = appTitle + ' task:' + taskName + ' id:' + workerId;
 log.info('Task "%s" (worker:%s) is running with tier', taskName, workerId, config.tier);
 
-process.on('unhandledRejection', err => console.log(err.stack));
+process.on('unhandledRejection', err => log.error(err.message, err.stack));

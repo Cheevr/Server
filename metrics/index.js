@@ -3,6 +3,7 @@ const db = require('cheevr-database');
 const moment = require('moment');
 const path = require('path');
 const shortId = require('shortid');
+const Tasks = require('../tasks');
 
 
 // Regex safe short ids
@@ -44,7 +45,7 @@ function setRequestMetrics(req, res, next) {
     next();
 }
 
-module.exports = async (app, tasks) => {
+module.exports = async (app) => {
     app.use(setRequestMetrics);
 
     if (config.kibana.enabled) {
@@ -55,7 +56,7 @@ module.exports = async (app, tasks) => {
             res.on('finish', () => task && task.roundRobin.sendMetrics(req.metrics));
             next();
         });
-        task = await tasks.addTask(path.join(__dirname, 'dispatcher'));
+        task = await Tasks.addTask(path.join(__dirname, 'dispatcher'));
 
         // DB stats polling to metrics
         let dbs = db.list();

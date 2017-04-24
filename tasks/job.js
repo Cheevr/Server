@@ -47,7 +47,7 @@ class Job {
         let context = new Context();
         this._lastRun = moment();
         return context.execute(this).then(() => {
-            log.debug('Job "%s" in task "%s" finished within %s', this.id, taskName, context.elapsed.humanize());
+            log.info('Job "%s" in task "%s" finished within %s', this.id, taskName, context.elapsed.humanize());
             this.state = 'idle';
             return context;
         }).catch(err => {
