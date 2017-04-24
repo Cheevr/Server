@@ -3,7 +3,7 @@ const db = require('cheevr-database');
 const moment = require('moment');
 const path = require('path');
 const shortId = require('shortid');
-const Tasks = require('../tasks');
+const Tasks = require('cheevr-tasks');
 
 
 // Regex safe short ids

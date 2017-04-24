@@ -34,6 +34,7 @@
     "cheevr-database": "https://github.com/Cheevr/Database.git",
     "cheevr-lang": "https://github.com/Cheevr/Lang.git",
     "cheevr-logging": "https://github.com/Cheevr/Logging.git",
+    "cheevr-tasks": "https://github.com/Cheevr/Tasks.git",
     "compression": "^1",
     "cookie-parser": "^1",
     "express": "^4",
