@@ -1,8 +1,8 @@
 const config = require('cheevr-config').addDefaultConfig(__dirname, 'config');
+const db = require('cheevr-database');
 const express = require('express');
 const lang = require('cheevr-lang').extend(__dirname, 'lang');
 const Logger = require('cheevr-logging');
-const db = require('cheevr-database');
 const path = require('path');
 
 
