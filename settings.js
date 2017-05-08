@@ -1,7 +1,7 @@
 const _ = require('lodash');
-const config = require('cheevr-config');
+const config = require('@cheevr/config');
 const fs = require('fs');
-const Logger = require('cheevr-logging');
+const Logger = require('@cheevr/logging');
 const path = require('path');
 const util = require('util');
 

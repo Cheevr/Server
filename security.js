@@ -1,5 +1,5 @@
 const bodyParser = require('body-parser');
-const config = require('cheevr-config');
+const config = require('@cheevr/config');
 const helmet = require('helmet');
 
 

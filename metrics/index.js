@@ -1,9 +1,9 @@
-const config = require('cheevr-config');
-const db = require('cheevr-database');
+const config = require('@cheevr/config');
+const db = require('@cheevr/database');
 const moment = require('moment');
 const path = require('path');
 const shortId = require('shortid');
-const Tasks = require('cheevr-tasks');
+const Tasks = require('@cheevr/tasks');
 
 
 // Regex safe short ids

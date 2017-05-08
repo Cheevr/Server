@@ -1,8 +1,8 @@
-const config = require('cheevr-config').addDefaultConfig(__dirname, '../config');
+const config = require('@cheevr/config').addDefaultConfig(__dirname, '../config');
 const async = require('async');
-const Database = require('cheevr-database');
+const Database = require('@cheevr/database');
 const geoip = require('geoip-lite');
-const Logger = require('cheevr-logging');
+const Logger = require('@cheevr/logging');
 
 
 const index = config.kibana.index;

@@ -1,4 +1,4 @@
-const database = require('cheevr-database');
+const database = require('@cheevr/database');
 const rateLimit = require('express-rate-limit');
 
 

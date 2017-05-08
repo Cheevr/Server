@@ -1,5 +1,5 @@
-let config = require('cheevr-config');
-let Database = require('cheevr-database');
+let config = require('@cheevr/config');
+let Database = require('@cheevr/database');
 
 class User {
     /**
