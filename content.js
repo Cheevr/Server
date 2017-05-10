@@ -122,7 +122,7 @@ module.exports = app => {
     // Error handler
     app.use(function (error, req, res, next) {
         Logger.server.error(util.format(error));
-        res.status(500);
+        res.statusCode > 399 || res.status(500);
         let acceptType = req.headers['accept'] || '';
         if (req.method == 'GET' && acceptType.indexOf('html') !== 0) {
             return res.render(500);

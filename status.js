@@ -7,6 +7,7 @@ let shutdown = false;
 
 module.exports = app => {
     // Health check that will gracefully signal shutdown
+    // TODO doesn't say what's wrong with the database
     app.get('/health', rateLimit({windowMs: 2500}), (req, res) => {
         if (!database.ready || shutdown) {
             return res.status(503).end();
