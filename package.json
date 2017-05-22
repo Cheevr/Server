@@ -1,6 +1,6 @@
 {
   "name": "@cheevr/server",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "An express server set up to server both html pages and json rest responses",
   "main": "index.js",
   "repository": {
@@ -33,6 +33,7 @@
     "@cheevr/database": "^1",
     "@cheevr/lang": "^1",
     "@cheevr/logging": "^1",
+    "@cheevr/metrics": "^1",
     "@cheevr/tasks": "^1",
     "compression": "^1",
     "cookie-parser": "^1",

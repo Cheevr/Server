@@ -1,7 +1,11 @@
 const bodyParser = require('body-parser');
 const config = require('@cheevr/config');
 const helmet = require('helmet');
+const shortId = require('shortid');
 
+
+// Regex safe short ids
+shortId.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@_');
 
 function checkOrigin(origin) {
     for (let host of config.backend.allowedHosts) {
@@ -18,6 +22,8 @@ module.exports = app => {
 
     // Set up cross domain security
     app.use((req, res, next) => {
+        // TODO add id to outgoing requests such as the message queue
+        req.id = req.get('id') || shortId.generate();
         let origin = req.headers.origin || req.headers.referer;
         if (origin) {
             if (!checkOrigin(origin)) {
