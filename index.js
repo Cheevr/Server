@@ -25,3 +25,4 @@ require('./content')(app);
 app.listen(config.backend.port);
 Logger.server.info('listening on port %s with tier %s', config.backend.port, config.tier);
 
+module.exports = app;
